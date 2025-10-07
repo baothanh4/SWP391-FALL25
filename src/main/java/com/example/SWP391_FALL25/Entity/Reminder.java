@@ -1,0 +1,31 @@
+package com.example.SWP391_FALL25.Entity;
+
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+
+@Table(name = "Reminder")
+@Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Reminder {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private LocalDate reminderDate;
+    private String status;
+
+    @ManyToOne
+    @JoinColumn(name = "vehicle_id")
+    private Vehicle vehicle;
+
+    @ManyToOne
+    @JoinColumn(name = "maintenance_plan_id")
+    private MaintenancePlan maintenancePlan;
+}
