@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,5 +28,6 @@ public class Reminder {
 
     @ManyToOne
     @JoinColumn(name = "maintenance_plan_id")
+    @JsonIgnore
     private MaintenancePlan maintenancePlan;
 }
