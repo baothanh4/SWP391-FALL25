@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -14,7 +15,7 @@ public class MaintenancePlan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String planName;
+
     private Integer intervalKm;
     private Integer intervalMonths;
 
@@ -22,5 +23,6 @@ public class MaintenancePlan {
     private List<MaintenancePlanItem> items;
 
     @OneToMany(mappedBy = "maintenancePlan", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Reminder> reminders;
 }
