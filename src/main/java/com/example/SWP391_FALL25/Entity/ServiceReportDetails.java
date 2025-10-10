@@ -1,6 +1,8 @@
 package com.example.SWP391_FALL25.Entity;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,13 +27,16 @@ public class ServiceReportDetails {
 
     @ManyToOne
     @JoinColumn(name = "report_id")
+    @JsonBackReference
     private ServiceReport report;
 
     @ManyToOne
     @JoinColumn(name = "part_id")
-    private Part part;                   // Nếu có thay thế phụ tùng
+    @JsonIgnore
+    private Part part;
 
     @ManyToOne
     @JoinColumn(name = "maintenance_plan_item_id")
+    @JsonIgnore
     private MaintenancePlanItem maintenancePlanItem;  // Liên kết đến hạng mục định kỳ
 }

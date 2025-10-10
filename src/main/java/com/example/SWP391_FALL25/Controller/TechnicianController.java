@@ -1,8 +1,11 @@
 package com.example.SWP391_FALL25.Controller;
 
+import com.example.SWP391_FALL25.DTO.Auth.ServiceReportDetailDTO;
 import com.example.SWP391_FALL25.Entity.ServiceAppointment;
+import com.example.SWP391_FALL25.Entity.ServiceReportDetails;
 import com.example.SWP391_FALL25.Service.ServiceAppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,5 +20,11 @@ public class TechnicianController {
     @GetMapping("/appointments")
     public List<ServiceAppointment> getAppointments(@RequestParam String name) {
         return serviceAppointmentService.getAppointmentsByTechnician(name);
+    }
+
+    @PostMapping("/{reportId}/details")
+    public ResponseEntity<?> addReportDetails(@PathVariable(name = "reportId") Long reportId, @RequestBody List<ServiceReportDetailDTO> detailDTOS){
+        List<ServiceReportDetails> details=serviceAppointmentService.addReportDetails(reportId,detailDTOS);
+        return ResponseEntity.ok(details);
     }
 }
