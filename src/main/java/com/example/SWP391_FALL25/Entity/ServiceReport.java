@@ -2,6 +2,8 @@ package com.example.SWP391_FALL25.Entity;
 
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,9 +26,10 @@ public class ServiceReport {
 
     @OneToOne
     @JoinColumn(name = "appointment_id")
-    @JsonBackReference
+    @JsonIgnore
     private ServiceAppointment appointment;
 
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<ServiceReportDetails> details;
 }

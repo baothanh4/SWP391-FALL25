@@ -1,12 +1,14 @@
 package com.example.SWP391_FALL25.Service;
 
 import com.example.SWP391_FALL25.DTO.Auth.ServiceAppointmentDTO;
+import com.example.SWP391_FALL25.DTO.Auth.ServiceReportDetailDTO;
 import com.example.SWP391_FALL25.Entity.*;
 import com.example.SWP391_FALL25.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -29,6 +31,15 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
 
     @Autowired
     private ReportRepository reportRepository;
+
+    @Autowired
+    private PartRepository partRepository;
+
+    @Autowired
+    private MaintenancePlanItemRepository maintenancePlanItemRepository;
+
+    @Autowired
+    private ServiceReportDetailsRepository serviceReportDetailsRepository;
 
     @Override
     public ServiceAppointment createAppointment(Long vehicleId, Long serviceId, ServiceAppointmentDTO dto){
@@ -76,8 +87,36 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
     }
 
     @Override
+    public List<ServiceReportDetails> addReportDetails(Long reportId, List<ServiceReportDetailDTO> reportDTO){
+        ServiceReport report=reportRepository.findById(reportId).orElseThrow(()->new RuntimeException("Report not found"));
+
+        List<ServiceReportDetails> savedDetails=new ArrayList<>();
+
+        for(ServiceReportDetailDTO dto:reportDTO){
+            Part part=dto.getPartId()!=null?partRepository.findById(dto.getPartId()).orElse(null):null;
+            MaintenancePlanItem item=dto.getMaintenanceItemId()!=null?maintenancePlanItemRepository.findById(dto.getMaintenanceItemId()).orElse(null):null;
+
+            ServiceReportDetails details=new ServiceReportDetails();
+            details.setReport(report);
+            details.setPart(part);
+            details.setMaintenancePlanItem(item);
+            details.setService(dto.getService());
+            details.setActionType(dto.getActionType());
+            details.setConditionStatus(dto.getConditionStatus());
+            details.setLaborCost(dto.getLaborCost());
+            details.setPartCost(dto.getPartCost());
+            details.setTotalCost((dto.getLaborCost()!=0.0?dto.getLaborCost():0.0)+(dto.getPartCost()!=0.0?dto.getPartCost():0.0));
+
+            savedDetails.add(serviceReportDetailsRepository.save(details));
+        }
+        return savedDetails;
+    }
+
+    @Override
     public List<ServiceAppointment> getAppointmentsByTechnician(String technicanName) {
         return serviceAppointmentRepository.findByTechnicanAssigned(technicanName);
     }
+
+
 
 }
