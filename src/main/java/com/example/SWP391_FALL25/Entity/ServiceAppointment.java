@@ -3,6 +3,7 @@ package com.example.SWP391_FALL25.Entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -35,11 +36,13 @@ public class ServiceAppointment {
 
     @ManyToOne
     @JoinColumn(name = "service_center_id")
+    @JsonIgnore
     private ServiceCenter serviceCenter;
 
     @OneToOne(mappedBy = "appointment", cascade = CascadeType.ALL)
     private Payment payment;
 
     @OneToOne(mappedBy = "appointment", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private ServiceReport report;
 }

@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Entity;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class ServiceReport {
 
     @OneToOne
     @JoinColumn(name = "appointment_id")
+    @JsonBackReference
     private ServiceAppointment appointment;
 
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL)

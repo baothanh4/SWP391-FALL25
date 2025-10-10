@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
@@ -73,4 +74,10 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
 
         reminderRepository.save(reminder);
     }
+
+    @Override
+    public List<ServiceAppointment> getAppointmentsByTechnician(String technicanName) {
+        return serviceAppointmentRepository.findByTechnicanAssigned(technicanName);
+    }
+
 }
