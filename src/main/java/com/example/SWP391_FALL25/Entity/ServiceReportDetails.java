@@ -17,7 +17,11 @@ public class ServiceReportDetails {
     private Long id;
 
     private String service;
-    private Double cost;
+    private String actionType;
+    private String conditionStatus;
+    private Double laborCost;
+    private Double partCost;
+    private Double totalCost;
 
     @ManyToOne
     @JoinColumn(name = "report_id")
@@ -25,5 +29,9 @@ public class ServiceReportDetails {
 
     @ManyToOne
     @JoinColumn(name = "part_id")
-    private Part part;
+    private Part part;                   // Nếu có thay thế phụ tùng
+
+    @ManyToOne
+    @JoinColumn(name = "maintenance_plan_item_id")
+    private MaintenancePlanItem maintenancePlanItem;  // Liên kết đến hạng mục định kỳ
 }

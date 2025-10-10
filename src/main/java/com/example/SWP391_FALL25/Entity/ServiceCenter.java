@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class ServiceCenter {
     private String contactNumber;
 
     @OneToMany(mappedBy = "serviceCenter", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<ServiceAppointment> appointments;
 
 }

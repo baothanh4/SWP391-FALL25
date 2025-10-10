@@ -32,8 +32,14 @@ public class Vehicle {
     private Users customer;
 
     @OneToOne(mappedBy = "vehicle", cascade = CascadeType.ALL)
+    @JsonIgnore
     private ServiceAppointment appointment;
 
     @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Reminder> reminders;
+
+    @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Part> parts;
 }

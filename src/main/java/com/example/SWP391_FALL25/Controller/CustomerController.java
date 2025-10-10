@@ -7,6 +7,7 @@ import com.example.SWP391_FALL25.Entity.ServiceAppointment;
 import com.example.SWP391_FALL25.Entity.Vehicle;
 import com.example.SWP391_FALL25.Service.CustomerService;
 import com.example.SWP391_FALL25.Service.ServiceAppointmentService;
+import com.example.SWP391_FALL25.Service.ServiceCenterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,9 @@ public class CustomerController {
     @Autowired
     private ServiceAppointmentService serviceAppointmentService;
 
+    @Autowired
+    private ServiceCenterService serviceCenterService;
+
     @PostMapping("/{id}/add-car")
     public Vehicle allCar(@RequestParam(name = "id") Long id, VehicleDTO vehicleDTO){
         return customerService.addCar(id,vehicleDTO);
@@ -30,6 +34,11 @@ public class CustomerController {
     public ResponseEntity<?> createAppointment(@RequestParam Long vehicleId, @RequestParam Long serviceCenterId,@RequestBody ServiceAppointmentDTO dto){
         ServiceAppointment appointment=serviceAppointmentService.createAppointment(vehicleId,serviceCenterId,dto);
         return ResponseEntity.ok(appointment);
+    }
+
+    @GetMapping("/service-center")
+    public ResponseEntity<?> getAllServiceCenter(){
+        return ResponseEntity.ok(serviceCenterService.getAllServiceCenter());
     }
 
 }
