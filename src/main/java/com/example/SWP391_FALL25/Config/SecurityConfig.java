@@ -30,7 +30,7 @@ public class SecurityConfig {
                         auth.requestMatchers("/api/auth/**",
                                         "/v3/api-docs/**",
                                         "/swagger-ui/**",
-                                        "/swagger-ui.html","/api/customer/**").permitAll()
+                                        "/swagger-ui.html","/api/customer/**","/api/staff/**").permitAll()
                                 .anyRequest().authenticated());
         return http.build();
     }

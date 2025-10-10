@@ -1,10 +1,13 @@
 package com.example.SWP391_FALL25.Entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Entity
 @Table(name = "Part")
@@ -19,6 +22,11 @@ public class Part {
     private String name;
     private Double price;
     private Integer quantity;
+
+    @ManyToOne
+    @JoinColumn(name = "vehicle_id")
+    @JsonIgnore
+    private Vehicle vehicle;
 
     @ManyToOne
     @JoinColumn(name = "part_type_id")

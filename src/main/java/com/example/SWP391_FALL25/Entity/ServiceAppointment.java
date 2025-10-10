@@ -2,6 +2,7 @@ package com.example.SWP391_FALL25.Entity;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,6 +30,7 @@ public class ServiceAppointment {
 
     @OneToOne
     @JoinColumn(name = "vehicle_id")
+    @JsonIgnore
     private Vehicle vehicle;
 
     @ManyToOne

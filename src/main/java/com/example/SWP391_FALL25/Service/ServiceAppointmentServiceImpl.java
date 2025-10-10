@@ -26,6 +26,9 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
     @Autowired
     private MaintenancePlanRepository maintenancePlanRepository;
 
+    @Autowired
+    private ReportRepository reportRepository;
+
     @Override
     public ServiceAppointment createAppointment(Long vehicleId, Long serviceId, ServiceAppointmentDTO dto){
         Vehicle vehicle=vehicleRepository.findById(vehicleId).orElseThrow(()->new RuntimeException("Vehicle not found"));
@@ -44,6 +47,21 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
 
         return appointment;
     }
+
+    @Override
+    public ServiceAppointment assignTechnican(Long appointmentId, String technicanName){
+        ServiceAppointment appointment=serviceAppointmentRepository.findById(appointmentId).orElseThrow(()->new RuntimeException("Appointment not found"));
+        appointment.setTechnicanAssigned(technicanName);
+
+        if(appointment.getReport()==null){
+            ServiceReport report=new ServiceReport();
+            report.setReportDate(LocalDate.now());
+            report.setAppointment(appointment);
+            reportRepository.save(report);
+        }
+        return serviceAppointmentRepository.save(appointment);
+    }
+
 
     private void createReminder(Vehicle vehicle, LocalDate appointmentDate){
         MaintenancePlan plan=maintenancePlanRepository.findByIntervalMonths(6).orElseThrow(()->new RuntimeException("Maintenance plan not found"));
