@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Controller;
 
 
+import com.example.SWP391_FALL25.DTO.Auth.RegisterRequest;
 import com.example.SWP391_FALL25.DTO.Auth.ServiceAppointmentDTO;
 import com.example.SWP391_FALL25.DTO.Auth.VehicleDTO;
 import com.example.SWP391_FALL25.Entity.ServiceAppointment;
@@ -41,4 +42,13 @@ public class CustomerController {
         return ResponseEntity.ok(serviceCenterService.getAllServiceCenter());
     }
 
+    @PatchMapping("/update-profile/{customerId}")
+    public ResponseEntity<?> updateProfile(@PathVariable Long customerId, @RequestBody RegisterRequest request){
+        return ResponseEntity.ok(customerService.updateInformation(customerId, request));
+    }
+
+    @DeleteMapping("/delete/{vehicleId}")
+    public void deleteCar(@PathVariable(name = "vehicleId")Long vehicleId){
+        customerService.deleteCar(vehicleId);
+    }
 }
