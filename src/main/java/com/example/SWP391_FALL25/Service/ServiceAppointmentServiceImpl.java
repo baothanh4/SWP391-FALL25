@@ -117,6 +117,37 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
         return serviceAppointmentRepository.findByTechnicanAssigned(technicanName);
     }
 
+    @Override
+    public ServiceReportDetails updateReportDetails(Long detailsId, ServiceReportDetailDTO dto){
+        ServiceReportDetails detail=serviceReportDetailsRepository.findById(detailsId).orElseThrow(()->new RuntimeException("Detail not found"));
+
+        if(dto.getService()!=null){
+            detail.setService(dto.getService());
+        }
+        if(dto.getActionType()!=null){
+            detail.setActionType(dto.getActionType());
+        }
+        if(dto.getConditionStatus()!=null){
+            detail.setConditionStatus(dto.getConditionStatus());
+        }
+        if(dto.getLaborCost()!=0.0){
+            detail.setLaborCost(dto.getLaborCost());
+        }
+        if(dto.getPartCost()!=0.0){
+            detail.setPartCost(dto.getPartCost());
+        }
+        detail.setTotalCost((dto.getLaborCost()!=0.0?dto.getLaborCost():0.0)+(dto.getPartCost()!=0.0?dto.getPartCost():0.0));
+
+        if(dto.getPartId()!=null){
+            Part part=partRepository.findById(dto.getPartId()).orElseThrow(()->new RuntimeException("Part not found"));
+            detail.setPart(part);
+        }
+        if(dto.getMaintenanceItemId()!=null){
+            MaintenancePlanItem item=maintenancePlanItemRepository.findById(dto.getMaintenanceItemId()).orElseThrow(()->new RuntimeException("Maintenance item not found"));
+            detail.setMaintenancePlanItem(item);
+        }
+        return serviceReportDetailsRepository.save(detail);
+    }
 
 
 }

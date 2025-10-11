@@ -16,4 +16,5 @@ public interface ServiceAppointmentService {
 
     List<ServiceAppointment> getAppointmentsByTechnician(String technicanName);
 
+    ServiceReportDetails updateReportDetails(Long detailsId, ServiceReportDetailDTO dto);
 }

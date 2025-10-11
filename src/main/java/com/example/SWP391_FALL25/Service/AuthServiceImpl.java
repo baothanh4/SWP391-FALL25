@@ -39,8 +39,8 @@ public class AuthServiceImpl implements AuthService{
                 users.getFullname(),
                 users.getEmail(),
                 users.getRole().name(),
-                users.getCertificate(),
-                users.getRating(),
+                users.getAddress(),
+                users.getDob(),
                 token);
     }
 
@@ -55,9 +55,8 @@ public class AuthServiceImpl implements AuthService{
         users.setPassword(passwordEncoder.encode(request.getPassword()));
         users.setFullname(request.getFullname());
         users.setEmail(request.getEmail());
-        users.setCertificate(request.getCertificate());
-        users.setRating(0.0);
-
+        users.setAddress(request.getAddress());
+        users.setDob(request.getDob());
         Role role=Role.valueOf(request.getRole()!=null ? request.getRole().toUpperCase():"CUSTOMER");
         users.setRole(role);
 
@@ -70,8 +69,8 @@ public class AuthServiceImpl implements AuthService{
                 users.getFullname(),
                 users.getEmail(),
                 users.getRole().name(),
-                users.getCertificate(),
-                users.getRating(),
+                users.getAddress(),
+                users.getDob(),
                 token);
     }
 

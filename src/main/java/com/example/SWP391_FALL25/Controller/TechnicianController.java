@@ -27,4 +27,10 @@ public class TechnicianController {
         List<ServiceReportDetails> details=serviceAppointmentService.addReportDetails(reportId,detailDTOS);
         return ResponseEntity.ok(details);
     }
+
+    @PatchMapping("/reports/details/{detailId}")
+    public ResponseEntity<ServiceReportDetails> updateDetails(@PathVariable(name="detailId") Long detailId,@RequestBody ServiceReportDetailDTO dto){
+        ServiceReportDetails details=serviceAppointmentService.updateReportDetails(detailId,dto);
+        return ResponseEntity.ok(details);
+    }
 }
