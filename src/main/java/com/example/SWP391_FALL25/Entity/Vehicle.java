@@ -39,7 +39,4 @@ public class Vehicle {
     @JsonIgnore
     private List<Reminder> reminders;
 
-    @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<Part> parts;
 }

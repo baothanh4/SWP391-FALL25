@@ -3,6 +3,7 @@ package com.example.SWP391_FALL25.Service;
 import com.example.SWP391_FALL25.DTO.Auth.ServiceAppointmentDTO;
 import com.example.SWP391_FALL25.DTO.Auth.ServiceReportDetailDTO;
 import com.example.SWP391_FALL25.Entity.*;
+import com.example.SWP391_FALL25.Enum.AppointmentStatus;
 import com.example.SWP391_FALL25.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,7 +52,8 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
         serviceAppointment.setServiceCenter(serviceCenter);
         serviceAppointment.setAppointmentDate(dto.getAppointmentDate());
         serviceAppointment.setAppointmentTime(dto.getAppointmentTime());
-        serviceAppointment.setTechnicanAssigned("Pending");
+        serviceAppointment.setTechnicanAssigned("None");
+        serviceAppointment.setStatus(AppointmentStatus.PENDING);
 
         ServiceAppointment appointment=serviceAppointmentRepository.save(serviceAppointment);
 
@@ -64,6 +66,7 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
     public ServiceAppointment assignTechnican(Long appointmentId, String technicanName){
         ServiceAppointment appointment=serviceAppointmentRepository.findById(appointmentId).orElseThrow(()->new RuntimeException("Appointment not found"));
         appointment.setTechnicanAssigned(technicanName);
+        appointment.setStatus(AppointmentStatus.ASSIGNED);
 
         if(appointment.getReport()==null){
             ServiceReport report=new ServiceReport();
@@ -89,6 +92,12 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
     @Override
     public List<ServiceReportDetails> addReportDetails(Long reportId, List<ServiceReportDetailDTO> reportDTO){
         ServiceReport report=reportRepository.findById(reportId).orElseThrow(()->new RuntimeException("Report not found"));
+
+        ServiceAppointment appointment = report.getAppointment();
+        if (!AppointmentStatus.IN_PROGRESS.equals(appointment.getStatus())) {
+            appointment.setStatus(AppointmentStatus.IN_PROGRESS);
+            serviceAppointmentRepository.save(appointment);
+        }
 
         List<ServiceReportDetails> savedDetails=new ArrayList<>();
 

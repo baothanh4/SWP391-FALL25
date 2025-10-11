@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Entity;
 
 
+import com.example.SWP391_FALL25.Enum.AppointmentStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -28,6 +29,9 @@ public class ServiceAppointment {
 
     private String appointmentTime;
     private String technicanAssigned;
+
+    @Enumerated(EnumType.STRING)
+    private AppointmentStatus status;
 
     @OneToOne
     @JoinColumn(name = "vehicle_id")

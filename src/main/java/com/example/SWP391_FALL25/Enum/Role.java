@@ -4,5 +4,5 @@ public enum Role {
     CUSTOMER,
     ADMIN,
     STAFF,
-    TECHNICAN
+    TECHNICIAN
 }

@@ -18,15 +18,10 @@ public class Part {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
     private Double price;
     private Integer quantity;
 
-    @ManyToOne
-    @JoinColumn(name = "vehicle_id")
-    @JsonIgnore
-    private Vehicle vehicle;
 
     @ManyToOne
     @JoinColumn(name = "part_type_id")
