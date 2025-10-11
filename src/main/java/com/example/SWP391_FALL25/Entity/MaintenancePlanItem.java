@@ -18,6 +18,7 @@ public class MaintenancePlanItem {
     private Long id;
 
     private String taskName;
+
     private String partType;
 
     @ManyToOne
