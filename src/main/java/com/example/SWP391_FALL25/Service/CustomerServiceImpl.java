@@ -22,6 +22,8 @@ public class CustomerServiceImpl implements CustomerService{
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+
+
     @Override
     public Vehicle addCar(Long customerID, VehicleDTO vehicleDTO) {
         Users users=userRepository.findById(customerID).orElseThrow(()->new RuntimeException("Customer not found"));
@@ -59,5 +61,12 @@ public class CustomerServiceImpl implements CustomerService{
             users.setPassword(passwordEncoder.encode(request.getPassword()));
         }
         return userRepository.save(users);
+    }
+
+    @Override
+    public void deleteCar(Long vehicleId){
+        Vehicle vehicle=vehicleRepository.findById(vehicleId).orElseThrow(()->new RuntimeException("Vehicle not found"));
+
+        vehicleRepository.delete(vehicle);
     }
 }

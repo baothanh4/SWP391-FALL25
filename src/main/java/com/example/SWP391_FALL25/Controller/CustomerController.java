@@ -47,4 +47,8 @@ public class CustomerController {
         return ResponseEntity.ok(customerService.updateInformation(customerId, request));
     }
 
+    @DeleteMapping("/delete/{vehicleId}")
+    public void deleteCar(@PathVariable(name = "vehicleId")Long vehicleId){
+        customerService.deleteCar(vehicleId);
+    }
 }

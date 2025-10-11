@@ -12,4 +12,6 @@ public interface CustomerService {
     Vehicle addCar(Long customerID, VehicleDTO vehicleDTO);
 
     Users updateInformation(Long customerId, RegisterRequest request);
+
+    void deleteCar( Long vehicleId);
 }
