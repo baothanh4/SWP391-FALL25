@@ -3,6 +3,8 @@ package com.example.SWP391_FALL25.DTO.Auth;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 @Data
 @AllArgsConstructor
 public class LoginResponse {
@@ -11,7 +13,7 @@ public class LoginResponse {
     private String fullname;
     private String email;
     private String role;
-    private String certificate;
-    private double rating;
+    private String address;
+    private LocalDate dob;
     private String token;
 }
