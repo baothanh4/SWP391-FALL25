@@ -7,5 +7,5 @@ import java.util.List;
 
 @Repository
 public interface ServiceAppointmentRepository extends JpaRepository<ServiceAppointment,Long> {
-    List<ServiceAppointment> findByTechnicanAssigned(String technicanAssigned);
+    List<ServiceAppointment> findByTechnicianAssigned(String technicanAssigned);
 }

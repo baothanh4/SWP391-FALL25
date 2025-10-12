@@ -42,6 +42,12 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
     @Autowired
     private ServiceReportDetailsRepository serviceReportDetailsRepository;
 
+    @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Autowired
+    private VNPayService vnPayService;
+
     @Override
     public ServiceAppointment createAppointment(Long vehicleId, Long serviceId, ServiceAppointmentDTO dto){
         Vehicle vehicle=vehicleRepository.findById(vehicleId).orElseThrow(()->new RuntimeException("Vehicle not found"));
@@ -52,7 +58,7 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
         serviceAppointment.setServiceCenter(serviceCenter);
         serviceAppointment.setAppointmentDate(dto.getAppointmentDate());
         serviceAppointment.setAppointmentTime(dto.getAppointmentTime());
-        serviceAppointment.setTechnicanAssigned("None");
+        serviceAppointment.setTechnicianAssigned("None");
         serviceAppointment.setStatus(AppointmentStatus.PENDING);
 
         ServiceAppointment appointment=serviceAppointmentRepository.save(serviceAppointment);
@@ -63,9 +69,9 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
     }
 
     @Override
-    public ServiceAppointment assignTechnican(Long appointmentId, String technicanName){
+    public ServiceAppointment assignTechnican(Long appointmentId, String technicianName){
         ServiceAppointment appointment=serviceAppointmentRepository.findById(appointmentId).orElseThrow(()->new RuntimeException("Appointment not found"));
-        appointment.setTechnicanAssigned(technicanName);
+        appointment.setTechnicianAssigned(technicianName);
         appointment.setStatus(AppointmentStatus.ASSIGNED);
 
         if(appointment.getReport()==null){
@@ -118,12 +124,15 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
 
             savedDetails.add(serviceReportDetailsRepository.save(details));
         }
+
+        updatePaymentForAppointment(reportId);
+
         return savedDetails;
     }
 
     @Override
     public List<ServiceAppointment> getAppointmentsByTechnician(String technicanName) {
-        return serviceAppointmentRepository.findByTechnicanAssigned(technicanName);
+        return serviceAppointmentRepository.findByTechnicianAssigned(technicanName);
     }
 
     @Override
@@ -155,7 +164,48 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
             MaintenancePlanItem item=maintenancePlanItemRepository.findById(dto.getMaintenanceItemId()).orElseThrow(()->new RuntimeException("Maintenance item not found"));
             detail.setMaintenancePlanItem(item);
         }
-        return serviceReportDetailsRepository.save(detail);
+
+        ServiceReportDetails savedDetail=serviceReportDetailsRepository.save(detail);
+
+        Long reportId=detail.getReport().getId();
+        updatePaymentForAppointment(reportId);
+
+        return savedDetail;
+    }
+    private String updatePaymentForAppointment(Long reportId){
+        Double totalCost=serviceReportDetailsRepository.calculateTotalByReportId(reportId);
+        if(totalCost==null){
+            totalCost=0.0;
+        }
+
+        ServiceReport report=reportRepository.findById(reportId).orElseThrow(()->new RuntimeException("Report not found"));
+
+        ServiceAppointment appointment=report.getAppointment();
+
+        Payment payment=paymentRepository.findByAppointmentId(appointment.getId());
+
+        if(payment==null){
+            payment=new Payment();
+            payment.setAppointment(appointment);
+            payment.setAmount(totalCost);
+            payment.setStatus("PENDING");
+            payment.setPaymentMethod("");
+            paymentRepository.save(payment);
+        }else{
+            payment.setAmount(totalCost);
+            paymentRepository.save(payment);
+        }
+
+        if("VNPAY".equalsIgnoreCase(payment.getPaymentMethod())){
+            try{
+                String paymentUrl= vnPayService.createVNPayUrl("PAYMENT"+payment.getId(),Math.round(payment.getAmount()));
+                return paymentUrl;
+            }catch (Exception e){
+                throw new RuntimeException("Error creating payment url");
+            }
+        }
+
+        return null;
     }
 
 

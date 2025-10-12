@@ -17,6 +17,7 @@ public class Payment {
     private Long id;
 
     private Double amount;
+
     private String paymentMethod;
     private String status;
 
