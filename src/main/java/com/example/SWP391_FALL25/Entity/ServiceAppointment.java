@@ -28,7 +28,7 @@ public class ServiceAppointment {
     private LocalDate appointmentDate;
 
     private String appointmentTime;
-    private String technicanAssigned;
+    private String technicianAssigned;
 
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status;

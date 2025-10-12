@@ -14,7 +14,7 @@ public class StaffController {
     private ServiceAppointmentService serviceAppointmentService;
 
     @PutMapping("/{id}/assign")
-    public ResponseEntity<?> assignTechnican(@PathVariable("id") Long appointmentId,@RequestParam String technicanName){
-        return ResponseEntity.ok(serviceAppointmentService.assignTechnican(appointmentId,technicanName));
+    public ResponseEntity<?> assignTechnican(@PathVariable("id") Long appointmentId,@RequestParam String technicianName){
+        return ResponseEntity.ok(serviceAppointmentService.assignTechnican(appointmentId,technicianName));
     }
 }
