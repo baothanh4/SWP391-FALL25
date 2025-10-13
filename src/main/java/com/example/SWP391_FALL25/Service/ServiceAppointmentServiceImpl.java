@@ -96,8 +96,9 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
     }
 
     @Override
-    public List<ServiceReportDetails> addReportDetails(Long reportId, List<ServiceReportDetailDTO> reportDTO){
-        ServiceReport report=reportRepository.findById(reportId).orElseThrow(()->new RuntimeException("Report not found"));
+    public List<ServiceReportDetails> addReportDetails(Long reportId, List<ServiceReportDetailDTO> reportDTO) {
+        ServiceReport report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
 
         ServiceAppointment appointment = report.getAppointment();
         if (!AppointmentStatus.IN_PROGRESS.equals(appointment.getStatus())) {
@@ -105,22 +106,35 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
             serviceAppointmentRepository.save(appointment);
         }
 
-        List<ServiceReportDetails> savedDetails=new ArrayList<>();
+        List<ServiceReportDetails> savedDetails = new ArrayList<>();
 
-        for(ServiceReportDetailDTO dto:reportDTO){
-            Part part=dto.getPartId()!=null?partRepository.findById(dto.getPartId()).orElse(null):null;
-            MaintenancePlanItem item=dto.getMaintenanceItemId()!=null?maintenancePlanItemRepository.findById(dto.getMaintenanceItemId()).orElse(null):null;
+        for (ServiceReportDetailDTO dto : reportDTO) {
+            Part part = dto.getPartId() != null ? partRepository.findById(dto.getPartId()).orElse(null) : null;
+            MaintenancePlanItem item = dto.getMaintenanceItemId() != null
+                    ? maintenancePlanItemRepository.findById(dto.getMaintenanceItemId()).orElse(null)
+                    : null;
 
-            ServiceReportDetails details=new ServiceReportDetails();
+            ServiceReportDetails details = new ServiceReportDetails();
             details.setReport(report);
             details.setPart(part);
             details.setMaintenancePlanItem(item);
             details.setService(dto.getService());
             details.setActionType(dto.getActionType());
             details.setConditionStatus(dto.getConditionStatus());
-            details.setLaborCost(dto.getLaborCost());
-            details.setPartCost(dto.getPartCost());
-            details.setTotalCost((dto.getLaborCost()!=0.0?dto.getLaborCost():0.0)+(dto.getPartCost()!=0.0?dto.getPartCost():0.0));
+
+            // ✅ Lấy laborCost (nếu null thì gán 0)
+            double laborCost = dto.getLaborCost() != 0.0 ? dto.getLaborCost() : 0.0;
+
+            // ✅ Lấy partCost từ Part (nếu có)
+            double partCost = 0.0;
+            if (part != null && part.getPrice() != null) {
+                partCost = part.getPrice();
+            }
+
+            // ✅ Gán lại vào entity
+            details.setLaborCost(laborCost);
+            details.setPartCost(partCost);
+            details.setTotalCost(laborCost + partCost);
 
             savedDetails.add(serviceReportDetailsRepository.save(details));
         }
@@ -129,6 +143,7 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
 
         return savedDetails;
     }
+
 
     @Override
     public List<ServiceAppointment> getAppointmentsByTechnician(String technicanName) {

@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,5 +23,6 @@ public class PartType {
     private String partNumber;
 
     @OneToMany(mappedBy = "partType", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Part> parts;
 }
