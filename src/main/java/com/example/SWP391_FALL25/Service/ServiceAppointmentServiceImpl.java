@@ -122,16 +122,16 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
             details.setActionType(dto.getActionType());
             details.setConditionStatus(dto.getConditionStatus());
 
-            // ✅ Lấy laborCost (nếu null thì gán 0)
+
             double laborCost = dto.getLaborCost() != 0.0 ? dto.getLaborCost() : 0.0;
 
-            // ✅ Lấy partCost từ Part (nếu có)
+
             double partCost = 0.0;
             if (part != null && part.getPrice() != null) {
                 partCost = part.getPrice();
             }
 
-            // ✅ Gán lại vào entity
+
             details.setLaborCost(laborCost);
             details.setPartCost(partCost);
             details.setTotalCost(laborCost + partCost);
