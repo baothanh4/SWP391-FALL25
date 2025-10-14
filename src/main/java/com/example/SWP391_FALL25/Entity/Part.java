@@ -25,5 +25,6 @@ public class Part {
 
     @ManyToOne
     @JoinColumn(name = "part_type_id")
+    @JsonIgnore
     private PartType partType;
 }
