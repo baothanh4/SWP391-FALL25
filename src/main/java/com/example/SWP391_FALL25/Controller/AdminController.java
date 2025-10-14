@@ -21,7 +21,7 @@ public class AdminController {
     @Autowired
     private AdminService adminService;
 
-    // ==================== USER MANAGEMENT ====================
+
 
     @GetMapping("/users")
     public ResponseEntity<List<Users>> getAllUsers() {
@@ -49,7 +49,7 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getUsersByRole(role));
     }
 
-    // ==================== SERVICE CENTER MANAGEMENT ====================
+
 
     @GetMapping("/service-centers")
     public ResponseEntity<List<ServiceCenter>> getAllServiceCenters() {
@@ -77,7 +77,7 @@ public class AdminController {
         return ResponseEntity.ok("Service center deleted successfully");
     }
 
-    // ==================== PARTS MANAGEMENT ====================
+
 
     @GetMapping("/parts")
     public ResponseEntity<List<Part>> getAllParts() {
@@ -105,7 +105,7 @@ public class AdminController {
         return ResponseEntity.ok("Part deleted successfully");
     }
 
-    // ==================== PART TYPE MANAGEMENT ====================
+
 
     @GetMapping("/part-types")
     public ResponseEntity<List<PartType>> getAllPartTypes() {
@@ -133,7 +133,7 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getLowStockParts(threshold));
     }
 
-    // ==================== MAINTENANCE PLAN MANAGEMENT ====================
+
 
     @GetMapping("/maintenance-plans")
     public ResponseEntity<List<MaintenancePlan>> getAllMaintenancePlans() {
@@ -161,7 +161,7 @@ public class AdminController {
         return ResponseEntity.ok("Maintenance plan deleted successfully");
     }
 
-    // ==================== APPOINTMENTS MANAGEMENT ====================
+
 
     @GetMapping("/appointments")
     public ResponseEntity<List<ServiceAppointment>> getAllAppointments() {
@@ -179,7 +179,7 @@ public class AdminController {
         return ResponseEntity.ok("Appointment deleted successfully");
     }
 
-    // ==================== PAYMENTS MANAGEMENT ====================
+
 
     @GetMapping("/payments")
     public ResponseEntity<List<Payment>> getAllPayments() {
@@ -191,7 +191,7 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getPaymentsByStatus(status));
     }
 
-    // ==================== STATISTICS & REPORTS ====================
+
 
     @GetMapping("/dashboard/stats")
     public ResponseEntity<DashboardStatsDTO> getDashboardStats() {
