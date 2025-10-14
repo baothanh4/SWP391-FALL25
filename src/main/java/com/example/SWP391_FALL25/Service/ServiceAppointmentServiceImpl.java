@@ -48,12 +48,17 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
     @Autowired
     private VNPayService vnPayService;
 
-    @Override
-    public ServiceAppointment createAppointment(Long vehicleId, Long serviceId, ServiceAppointmentDTO dto){
-        Vehicle vehicle=vehicleRepository.findById(vehicleId).orElseThrow(()->new RuntimeException("Vehicle not found"));
-        ServiceCenter serviceCenter=serviceCenterRepository.findById(serviceId).orElseThrow(()->new RuntimeException("Service center not found"));
+    @Autowired
+    private EmailService emailService;
 
-        ServiceAppointment serviceAppointment=new ServiceAppointment();
+    @Override
+    public ServiceAppointment createAppointment(Long vehicleId, Long serviceId, ServiceAppointmentDTO dto) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new RuntimeException("Vehicle not found"));
+        ServiceCenter serviceCenter = serviceCenterRepository.findById(serviceId)
+                .orElseThrow(() -> new RuntimeException("Service center not found"));
+
+        ServiceAppointment serviceAppointment = new ServiceAppointment();
         serviceAppointment.setVehicle(vehicle);
         serviceAppointment.setServiceCenter(serviceCenter);
         serviceAppointment.setAppointmentDate(dto.getAppointmentDate());
@@ -61,9 +66,28 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
         serviceAppointment.setTechnicianAssigned("None");
         serviceAppointment.setStatus(AppointmentStatus.PENDING);
 
-        ServiceAppointment appointment=serviceAppointmentRepository.save(serviceAppointment);
+        ServiceAppointment appointment = serviceAppointmentRepository.save(serviceAppointment);
 
         createReminder(vehicle, dto.getAppointmentDate());
+
+        // ✅ Gửi email thông báo
+        try {
+            String to = vehicle.getCustomer().getEmail(); // hoặc dto.getEmail() nếu có trong DTO
+            String subject = "Xác nhận lịch hẹn dịch vụ xe";
+            String body = "Xin chào " + vehicle.getCustomer().getFullname() + ",\n\n"
+                    + "Bạn đã đặt lịch hẹn dịch vụ thành công.\n\n"
+                    + "📅 Ngày: " + dto.getAppointmentDate() + "\n"
+                    + "🕓 Thời gian: " + dto.getAppointmentTime() + "\n"
+                    + "🏢 Trung tâm: " + serviceCenter.getName() + "\n"
+                    + "🚗 Xe: " + vehicle.getBrand() + " " + vehicle.getModel() + "\n\n"
+                    + "Chúng tôi sẽ liên hệ bạn sớm để xác nhận chi tiết.\n\n"
+                    + "Trân trọng,\nĐội ngũ Dịch vụ khách hàng.";
+
+            emailService.sendEmail(to, subject, body);
+            System.out.println("✅ Email xác nhận đã được gửi đến " + to);
+        } catch (Exception e) {
+            System.err.println("❌ Không thể gửi email xác nhận: " + e.getMessage());
+        }
 
         return appointment;
     }

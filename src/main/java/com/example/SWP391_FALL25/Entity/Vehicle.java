@@ -38,4 +38,6 @@ public class Vehicle {
     @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Reminder> reminders;
+
+
 }
