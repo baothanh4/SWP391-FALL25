@@ -24,6 +24,9 @@ public class AuthServiceImpl implements AuthService{
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private EmailService emailService;
+
     @Override
     public LoginResponse login(LoginRequest request){
         Users users=userRepository.findByPhone(request.getPhone()).orElseThrow(()->new RuntimeException("User not found"));
@@ -50,28 +53,46 @@ public class AuthServiceImpl implements AuthService{
             throw new RuntimeException("Phone number already exists");
         }
 
-        Users users=new Users();
+        Users users = new Users();
         users.setPhone(request.getPhone());
         users.setPassword(passwordEncoder.encode(request.getPassword()));
         users.setFullname(request.getFullname());
         users.setEmail(request.getEmail());
         users.setAddress(request.getAddress());
         users.setDob(request.getDob());
-        Role role=Role.valueOf(request.getRole()!=null ? request.getRole().toUpperCase():"CUSTOMER");
+        Role role = Role.valueOf(request.getRole() != null ? request.getRole().toUpperCase() : "CUSTOMER");
         users.setRole(role);
 
         userRepository.save(users);
 
-        String token=jwtTokenProvider.generateToken(users.getPhone(), users.getRole().name());
 
-        return new LoginResponse(users.getId(),
+        String subject = "Đăng ký tài khoản thành công";
+        String body = "Xin chào " + users.getFullname() + ",\n\n"
+                + "Chúc mừng bạn đã đăng ký tài khoản thành công trên hệ thống của chúng tôi!\n"
+                + "Thông tin tài khoản:\n"
+                + "📱 Số điện thoại: " + users.getPhone() + "\n"
+                + "📧 Email: " + users.getEmail() + "\n\n"
+                + "Chúc bạn có trải nghiệm tuyệt vời.\n\n"
+                + "Trân trọng,\nĐội ngũ hỗ trợ khách hàng.";
+
+        try {
+            emailService.sendEmail(users.getEmail(), subject, body);
+        } catch (Exception e) {
+            System.err.println("❌ Gửi email thất bại: " + e.getMessage());
+        }
+
+        String token = jwtTokenProvider.generateToken(users.getPhone(), users.getRole().name());
+
+        return new LoginResponse(
+                users.getId(),
                 users.getPhone(),
                 users.getFullname(),
                 users.getEmail(),
                 users.getRole().name(),
                 users.getAddress(),
                 users.getDob(),
-                token);
+                token
+        );
     }
 
     @Override
