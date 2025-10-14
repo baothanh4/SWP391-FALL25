@@ -34,7 +34,8 @@ public class SecurityConfig {
                                         "/api/customer/**",
                                         "/api/staff/**",
                                         "/api/technician/**",
-                                        "/api/payment/**").permitAll()
+                                        "/api/payment/**",
+                                        "/api/admin/**").permitAll()
                                 .anyRequest().authenticated());
         return http.build();
     }
