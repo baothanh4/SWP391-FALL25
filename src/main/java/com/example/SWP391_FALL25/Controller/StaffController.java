@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Controller;
 
 
+import com.example.SWP391_FALL25.Entity.ServiceAppointment;
 import com.example.SWP391_FALL25.Service.ServiceAppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,8 @@ public class StaffController {
     private ServiceAppointmentService serviceAppointmentService;
 
     @PutMapping("/{id}/assign")
-    public ResponseEntity<?> assignTechnican(@PathVariable("id") Long appointmentId,@RequestParam String technicianName){
-        return ResponseEntity.ok(serviceAppointmentService.assignTechnican(appointmentId,technicianName));
+    public ResponseEntity<?> assignTechnican(@PathVariable("id") Long appointmentId,@RequestParam Long technicianId){
+        ServiceAppointment updatedAppointment = serviceAppointmentService.assignTechnician(appointmentId, technicianId);
+        return ResponseEntity.ok(updatedAppointment);
     }
 }

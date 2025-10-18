@@ -4,6 +4,8 @@ import com.example.SWP391_FALL25.DTO.Auth.PartDTO;
 import com.example.SWP391_FALL25.DTO.Auth.ServiceReportDetailDTO;
 import com.example.SWP391_FALL25.Entity.ServiceAppointment;
 import com.example.SWP391_FALL25.Entity.ServiceReportDetails;
+import com.example.SWP391_FALL25.Entity.Users;
+import com.example.SWP391_FALL25.Repository.UserRepository;
 import com.example.SWP391_FALL25.Service.ServiceAppointmentService;
 import com.example.SWP391_FALL25.Service.TechnicianService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +24,13 @@ public class TechnicianController {
     @Autowired
     private TechnicianService technicianService;
 
-    @GetMapping("/appointments")
-    public List<ServiceAppointment> getAppointments(@RequestParam String name) {
-        return serviceAppointmentService.getAppointmentsByTechnician(name);
+    @Autowired
+    private UserRepository userRepository;
+
+    @GetMapping("/{technicianId}/tasks")
+    public List<ServiceAppointment> getAppointments(@PathVariable(name = "technicianId")Long technicianId) {
+        Users techician=userRepository.findById(technicianId).orElseThrow(()->new IllegalArgumentException("TechnicianId not found"));
+        return serviceAppointmentService.getAppointmentsByTechnician(techician.getFullname());
     }
 
     @PostMapping("/{reportId}/details")

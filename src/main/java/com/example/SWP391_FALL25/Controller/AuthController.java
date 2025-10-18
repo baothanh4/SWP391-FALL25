@@ -3,6 +3,7 @@ package com.example.SWP391_FALL25.Controller;
 import com.example.SWP391_FALL25.DTO.Auth.LoginRequest;
 import com.example.SWP391_FALL25.DTO.Auth.LoginResponse;
 import com.example.SWP391_FALL25.DTO.Auth.RegisterRequest;
+import com.example.SWP391_FALL25.DTO.Auth.UsersDTO;
 import com.example.SWP391_FALL25.Entity.Users;
 import com.example.SWP391_FALL25.Service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,4 +30,7 @@ public class AuthController {
     public List<Users> getAllAccount(){
         return authService.getAll();
     }
+
+    @GetMapping("/profile/{id}")
+    public UsersDTO getProfile(@PathVariable("id") Long id){ return authService.getAccountById(id); }
 }

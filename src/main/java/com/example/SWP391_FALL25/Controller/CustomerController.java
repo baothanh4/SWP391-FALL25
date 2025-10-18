@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/customer")
 public class CustomerController {
@@ -27,12 +29,12 @@ public class CustomerController {
     private ServiceCenterService serviceCenterService;
 
     @PostMapping("/{id}/add-car")
-    public Vehicle allCar(@RequestParam(name = "id") Long id, VehicleDTO vehicleDTO){
+    public Vehicle allCar(@PathVariable(name = "id") Long id,@RequestBody VehicleDTO vehicleDTO){
         return customerService.addCar(id,vehicleDTO);
     }
 
-    @PostMapping("/appointment/create")
-    public ResponseEntity<?> createAppointment(@RequestParam Long vehicleId, @RequestParam Long serviceCenterId,@RequestBody ServiceAppointmentDTO dto){
+    @PostMapping("/appointment/create/{vehicleId}/{serviceCenterId}")
+    public ResponseEntity<?> createAppointment(@PathVariable Long vehicleId, @PathVariable Long serviceCenterId,@RequestBody ServiceAppointmentDTO dto){
         ServiceAppointment appointment=serviceAppointmentService.createAppointment(vehicleId,serviceCenterId,dto);
         return ResponseEntity.ok(appointment);
     }
@@ -51,4 +53,16 @@ public class CustomerController {
     public void deleteCar(@PathVariable(name = "vehicleId")Long vehicleId){
         customerService.deleteCar(vehicleId);
     }
+
+    @GetMapping("/vehicle/details/{id}")
+    public ResponseEntity<VehicleDTO> getVehicleById(@PathVariable(name = "id")Long id){
+        return ResponseEntity.ok(customerService.getVehicleById(id));
+    }
+
+    @GetMapping("/{userId}/appointments")
+    public ResponseEntity<List<ServiceAppointment>> getUserAppointments(@PathVariable Long userId) {
+        List<ServiceAppointment> appointments = customerService.getAppointmentByUser(userId);
+        return ResponseEntity.ok(appointments);
+    }
+
 }

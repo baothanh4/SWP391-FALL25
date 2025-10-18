@@ -44,6 +44,7 @@ public class ServiceAppointment {
     private ServiceCenter serviceCenter;
 
     @OneToOne(mappedBy = "appointment", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Payment payment;
 
     @OneToOne(mappedBy = "appointment", cascade = CascadeType.ALL)

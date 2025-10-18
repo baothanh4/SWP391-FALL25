@@ -2,13 +2,17 @@ package com.example.SWP391_FALL25.Service;
 
 import com.example.SWP391_FALL25.DTO.Auth.RegisterRequest;
 import com.example.SWP391_FALL25.DTO.Auth.VehicleDTO;
+import com.example.SWP391_FALL25.Entity.ServiceAppointment;
 import com.example.SWP391_FALL25.Entity.Users;
 import com.example.SWP391_FALL25.Entity.Vehicle;
+import com.example.SWP391_FALL25.Repository.ServiceAppointmentRepository;
 import com.example.SWP391_FALL25.Repository.UserRepository;
 import com.example.SWP391_FALL25.Repository.VehicleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class CustomerServiceImpl implements CustomerService{
@@ -22,6 +26,8 @@ public class CustomerServiceImpl implements CustomerService{
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private ServiceAppointmentRepository serviceAppointmentRepository;
 
 
     @Override
@@ -69,4 +75,26 @@ public class CustomerServiceImpl implements CustomerService{
 
         vehicleRepository.delete(vehicle);
     }
+
+    @Override
+    public VehicleDTO getVehicleById(Long id){
+        Vehicle vehicle=vehicleRepository.findById(id).orElseThrow(()->new RuntimeException("Vehicle not found"));
+
+        VehicleDTO vehicleDTO=new VehicleDTO();
+        vehicleDTO.setId(vehicle.getId());
+        vehicleDTO.setVin(vehicle.getVin());
+        vehicleDTO.setLicensePlate(vehicle.getLicensePlate());
+        vehicleDTO.setBrand(vehicle.getBrand());
+        vehicleDTO.setModel(vehicle.getModel());
+        vehicleDTO.setOdometer(vehicle.getOdometer());
+        vehicleDTO.setYear(vehicle.getYear());
+
+        return vehicleDTO;
+    }
+
+    @Override
+    public List<ServiceAppointment> getAppointmentByUser(Long userId){
+        return serviceAppointmentRepository.findByUserId(userId);
+    }
+
 }

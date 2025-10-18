@@ -5,6 +5,7 @@ import com.example.SWP391_FALL25.DTO.Auth.ServiceReportDetailDTO;
 import com.example.SWP391_FALL25.Entity.*;
 import com.example.SWP391_FALL25.Enum.AppointmentStatus;
 import com.example.SWP391_FALL25.Repository.*;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -51,6 +52,9 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @Override
     public ServiceAppointment createAppointment(Long vehicleId, Long serviceId, ServiceAppointmentDTO dto) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
@@ -93,17 +97,24 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
     }
 
     @Override
-    public ServiceAppointment assignTechnican(Long appointmentId, String technicianName){
-        ServiceAppointment appointment=serviceAppointmentRepository.findById(appointmentId).orElseThrow(()->new RuntimeException("Appointment not found"));
-        appointment.setTechnicianAssigned(technicianName);
+    public ServiceAppointment assignTechnician(Long appointmentId, Long technicianId) {
+        ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        Users technician = userRepository.findById(technicianId)
+                .orElseThrow(() -> new RuntimeException("Technician not found"));
+
+        appointment.setTechnicianAssigned(technician.getFullname());
         appointment.setStatus(AppointmentStatus.ASSIGNED);
 
-        if(appointment.getReport()==null){
-            ServiceReport report=new ServiceReport();
+        // Nếu chưa có report thì tạo
+        if (appointment.getReport() == null) {
+            ServiceReport report = new ServiceReport();
             report.setReportDate(LocalDate.now());
             report.setAppointment(appointment);
             reportRepository.save(report);
         }
+
         return serviceAppointmentRepository.save(appointment);
     }
 
@@ -120,6 +131,7 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
     }
 
     @Override
+    @Transactional
     public List<ServiceReportDetails> addReportDetails(Long reportId, List<ServiceReportDetailDTO> reportDTO) {
         ServiceReport report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
@@ -131,12 +143,10 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
         }
 
         List<ServiceReportDetails> savedDetails = new ArrayList<>();
-
         for (ServiceReportDetailDTO dto : reportDTO) {
-            Part part = dto.getPartId() != null ? partRepository.findById(dto.getPartId()).orElse(null) : null;
-            MaintenancePlanItem item = dto.getMaintenanceItemId() != null
-                    ? maintenancePlanItemRepository.findById(dto.getMaintenanceItemId()).orElse(null)
-                    : null;
+            Part part = (dto.getPartId() != null) ? partRepository.findById(dto.getPartId()).orElse(null) : null;
+            MaintenancePlanItem item = (dto.getMaintenanceItemId() != null)
+                    ? maintenancePlanItemRepository.findById(dto.getMaintenanceItemId()).orElse(null) : null;
 
             ServiceReportDetails details = new ServiceReportDetails();
             details.setReport(report);
@@ -145,33 +155,22 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
             details.setService(dto.getService());
             details.setActionType(dto.getActionType());
             details.setConditionStatus(dto.getConditionStatus());
-
-
-            double laborCost = dto.getLaborCost() != 0.0 ? dto.getLaborCost() : 0.0;
-
-
-            double partCost = 0.0;
-            if (part != null && part.getPrice() != null) {
-                partCost = part.getPrice();
-            }
-
-
-            details.setLaborCost(laborCost);
-            details.setPartCost(partCost);
-            details.setTotalCost(laborCost + partCost);
+            details.setLaborCost(dto.getLaborCost());
+            details.setPartCost(part != null ? part.getPrice() : 0.0);
+            details.setTotalCost(details.getLaborCost() + details.getPartCost());
 
             savedDetails.add(serviceReportDetailsRepository.save(details));
         }
 
         updatePaymentForAppointment(reportId);
-
         return savedDetails;
     }
 
 
+
     @Override
-    public List<ServiceAppointment> getAppointmentsByTechnician(String technicanName) {
-        return serviceAppointmentRepository.findByTechnicianAssigned(technicanName);
+    public List<ServiceAppointment> getAppointmentsByTechnician(String fullName) {
+        return serviceAppointmentRepository.findByTechnicianAssigned(fullName);
     }
 
     @Override
@@ -211,41 +210,29 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
 
         return savedDetail;
     }
-    private String updatePaymentForAppointment(Long reportId){
-        Double totalCost=serviceReportDetailsRepository.calculateTotalByReportId(reportId);
-        if(totalCost==null){
-            totalCost=0.0;
-        }
 
-        ServiceReport report=reportRepository.findById(reportId).orElseThrow(()->new RuntimeException("Report not found"));
 
-        ServiceAppointment appointment=report.getAppointment();
+    private void updatePaymentForAppointment(Long reportId) {
+        Double totalCost = serviceReportDetailsRepository.calculateTotalByReportId(reportId);
+        if (totalCost == null) totalCost = 0.0;
 
-        Payment payment=paymentRepository.findByAppointmentId(appointment.getId());
+        ServiceReport report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+        ServiceAppointment appointment = report.getAppointment();
 
-        if(payment==null){
-            payment=new Payment();
+        Payment payment = paymentRepository.findByAppointmentId(appointment.getId());
+        if (payment == null) {
+            payment = new Payment();
             payment.setAppointment(appointment);
             payment.setAmount(totalCost);
             payment.setStatus("PENDING");
-            payment.setPaymentMethod("");
             paymentRepository.save(payment);
-        }else{
+        } else {
             payment.setAmount(totalCost);
             paymentRepository.save(payment);
         }
-
-        if("VNPAY".equalsIgnoreCase(payment.getPaymentMethod())){
-            try{
-                String paymentUrl= vnPayService.createVNPayUrl("PAYMENT"+payment.getId(),Math.round(payment.getAmount()));
-                return paymentUrl;
-            }catch (Exception e){
-                throw new RuntimeException("Error creating payment url");
-            }
-        }
-
-        return null;
     }
+
 
 
 }
