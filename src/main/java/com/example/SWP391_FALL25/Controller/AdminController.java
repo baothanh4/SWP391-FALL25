@@ -7,6 +7,7 @@ import com.example.SWP391_FALL25.DTO.Auth.DashboardStatsDTO;
 import com.example.SWP391_FALL25.DTO.Auth.PartTypeDTO;
 import com.example.SWP391_FALL25.DTO.Auth.MaintenancePlanDTO;
 import com.example.SWP391_FALL25.Entity.*;
+import com.example.SWP391_FALL25.Repository.MaintenancePlanItemRepository;
 import com.example.SWP391_FALL25.Service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,8 @@ public class AdminController {
     @Autowired
     private AdminService adminService;
 
-
+    @Autowired
+    private MaintenancePlanItemRepository maintenancePlanItemRepository;
 
     @GetMapping("/users")
     public ResponseEntity<List<Users>> getAllUsers() {
@@ -208,5 +210,10 @@ public class AdminController {
     @GetMapping("/reports/appointments-by-month")
     public ResponseEntity<?> getAppointmentsByMonth(@RequestParam int year) {
         return ResponseEntity.ok(adminService.getAppointmentsByMonth(year));
+    }
+
+    @GetMapping("/maintenance-item")
+    public ResponseEntity<?> getAllMaintenanceItems(){
+        return ResponseEntity.ok(maintenancePlanItemRepository.findAll());
     }
 }

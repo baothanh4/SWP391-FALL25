@@ -2,6 +2,8 @@ package com.example.SWP391_FALL25.Entity;
 
 
 import com.example.SWP391_FALL25.Enum.Role;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,7 +32,8 @@ public class Users {
     private String address;
     private LocalDate dob;
 
-    @OneToMany(mappedBy = "customer",cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<Vehicle> vehicles;
 
 }

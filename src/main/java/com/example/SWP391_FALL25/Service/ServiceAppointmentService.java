@@ -10,11 +10,13 @@ import java.util.List;
 public interface ServiceAppointmentService {
     ServiceAppointment createAppointment(Long vehicleId, Long serviceId, ServiceAppointmentDTO dto);
 
-    ServiceAppointment assignTechnican(Long appointmentId, String technicanName);
+
+    ServiceAppointment assignTechnician(Long appointmentId, Long technicianId);
 
     List<ServiceReportDetails> addReportDetails(Long reportId, List<ServiceReportDetailDTO> reportDTO);
 
-    List<ServiceAppointment> getAppointmentsByTechnician(String technicanName);
+
+    List<ServiceAppointment> getAppointmentsByTechnician(String fullName);
 
     ServiceReportDetails updateReportDetails(Long detailsId, ServiceReportDetailDTO dto);
 }

@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,5 +24,6 @@ public class Payment {
 
     @OneToOne
     @JoinColumn(name = "appointment_id")
+    @JsonIgnore
     private ServiceAppointment appointment;
 }
