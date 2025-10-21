@@ -49,7 +49,7 @@ public class AdminServiceImpl implements AdminService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // ==================== USER MANAGEMENT ====================
+
 
     @Override
     public List<Users> getAllUsers() {
@@ -104,7 +104,7 @@ public class AdminServiceImpl implements AdminService {
                 .collect(Collectors.toList());
     }
 
-    // ==================== SERVICE CENTER MANAGEMENT ====================
+
 
     @Override
     public List<ServiceCenter> getAllServiceCenters() {
@@ -152,7 +152,7 @@ public class AdminServiceImpl implements AdminService {
         serviceCenterRepository.delete(serviceCenter);
     }
 
-    // ==================== PARTS MANAGEMENT ====================
+
 
     @Override
     public List<Part> getAllParts() {
@@ -212,7 +212,7 @@ public class AdminServiceImpl implements AdminService {
                 .collect(Collectors.toList());
     }
 
-    // ==================== PART TYPE MANAGEMENT ====================
+
 
     @Override
     public List<PartType> getAllPartTypes() {
@@ -252,7 +252,7 @@ public class AdminServiceImpl implements AdminService {
         partTypeRepository.delete(partType);
     }
 
-    // ==================== MAINTENANCE PLAN MANAGEMENT ====================
+
 
     @Override
     public List<MaintenancePlan> getAllMaintenancePlans() {
@@ -313,7 +313,7 @@ public class AdminServiceImpl implements AdminService {
         maintenancePlanRepository.delete(plan);
     }
 
-    // ==================== APPOINTMENTS MANAGEMENT ====================
+
 
     @Override
     public List<ServiceAppointment> getAllAppointments() {
@@ -336,7 +336,7 @@ public class AdminServiceImpl implements AdminService {
         serviceAppointmentRepository.delete(appointment);
     }
 
-    // ==================== PAYMENTS MANAGEMENT ====================
+
 
     @Override
     public List<Payment> getAllPayments() {
@@ -350,7 +350,7 @@ public class AdminServiceImpl implements AdminService {
                 .collect(Collectors.toList());
     }
 
-    // ==================== STATISTICS & REPORTS ====================
+
 
     @Override
     public DashboardStatsDTO getDashboardStats() {

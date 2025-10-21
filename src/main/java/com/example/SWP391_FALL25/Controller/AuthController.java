@@ -1,12 +1,10 @@
 package com.example.SWP391_FALL25.Controller;
 
-import com.example.SWP391_FALL25.DTO.Auth.LoginRequest;
-import com.example.SWP391_FALL25.DTO.Auth.LoginResponse;
-import com.example.SWP391_FALL25.DTO.Auth.RegisterRequest;
-import com.example.SWP391_FALL25.DTO.Auth.UsersDTO;
+import com.example.SWP391_FALL25.DTO.Auth.*;
 import com.example.SWP391_FALL25.Entity.Users;
 import com.example.SWP391_FALL25.Service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,4 +31,22 @@ public class AuthController {
 
     @GetMapping("/profile/{id}")
     public UsersDTO getProfile(@PathVariable("id") Long id){ return authService.getAccountById(id); }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request){
+        authService.sendOtpToEmail(request.getEmail());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpPassword request){
+        boolean valid =authService.verifyOtp(request.getEmail(), request.getOtp());
+        return valid?ResponseEntity.ok("OTP hop le"):ResponseEntity.badRequest().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request){
+        boolean success=authService.resetPassword(request.getEmail(), request.getOtp(), request.getNewPassword());
+        return success?ResponseEntity.ok("Doi mat khau thanh cong"):ResponseEntity.badRequest().build();
+    }
 }
