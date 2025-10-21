@@ -18,4 +18,10 @@ public interface AuthService {
 
 
     UsersDTO getAccountById(Long id);
+
+    void sendOtpToEmail(String email);
+
+    boolean verifyOtp(String email, String otp);
+
+    boolean resetPassword(String email, String otp, String newPassword);
 }
