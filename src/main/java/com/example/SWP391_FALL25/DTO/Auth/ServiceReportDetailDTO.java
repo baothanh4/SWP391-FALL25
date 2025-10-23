@@ -10,6 +10,7 @@ public class ServiceReportDetailDTO {
     private String service;
     private String actionType;
     private String conditionStatus;
+    private int quantity;
     private double laborCost;
     private double partCost;
 }

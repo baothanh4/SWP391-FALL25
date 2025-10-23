@@ -109,7 +109,7 @@ public class PaymentServiceImpl implements PaymentService{
                     Math.round(payment.getAmount())
             );
 
-            payment.setStatus(PaymentStatus.PENDING);
+            payment.setStatus(PaymentStatus.COMPLETED);
             paymentRepository.save(payment);
 
             Map<String, Object> result = new HashMap<>();
