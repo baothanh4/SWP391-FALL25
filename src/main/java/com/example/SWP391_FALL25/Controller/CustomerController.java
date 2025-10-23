@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Controller;
 
 
+import com.example.SWP391_FALL25.DTO.Auth.QuotationResponseDTO;
 import com.example.SWP391_FALL25.DTO.Auth.RegisterRequest;
 import com.example.SWP391_FALL25.DTO.Auth.ServiceAppointmentDTO;
 import com.example.SWP391_FALL25.DTO.Auth.VehicleDTO;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/customer")
@@ -63,6 +65,38 @@ public class CustomerController {
     public ResponseEntity<List<ServiceAppointment>> getUserAppointments(@PathVariable Long userId) {
         List<ServiceAppointment> appointments = customerService.getAppointmentByUser(userId);
         return ResponseEntity.ok(appointments);
+    }
+
+    @GetMapping("/quotation/{appointmentId}")
+    public ResponseEntity<QuotationResponseDTO> getQuotation(@PathVariable Long appointmentId) {
+        QuotationResponseDTO quotation = customerService.getQuotation(appointmentId);
+        return ResponseEntity.ok(quotation);
+    }
+
+    @PostMapping("/quotation/{appointmentId}/approve")
+    public ResponseEntity<?> approveQuotation(
+            @PathVariable Long appointmentId,
+            @RequestBody Map<String, String> request) {
+        String paymentMethod = request.getOrDefault("paymentMethod", "CASH");
+        ServiceAppointment appointment = customerService.approveQuotation(
+                appointmentId, paymentMethod);
+        return ResponseEntity.ok(Map.of(
+                "message", "Quotation approved successfully",
+                "appointment", appointment
+        ));
+    }
+
+    @PostMapping("/quotation/{appointmentId}/reject")
+    public ResponseEntity<?> rejectQuotation(
+            @PathVariable Long appointmentId,
+            @RequestBody Map<String, String> request) {
+        String reason = request.getOrDefault("reason", "No reason provided");
+        ServiceAppointment appointment = customerService.rejectQuotation(
+                appointmentId, reason);
+        return ResponseEntity.ok(Map.of(
+                "message", "Quotation rejected",
+                "appointment", appointment
+        ));
     }
 
 }

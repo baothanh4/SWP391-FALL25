@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Entity;
 
 
+import com.example.SWP391_FALL25.Enum.PaymentStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,7 +21,8 @@ public class Payment {
     private Double amount;
 
     private String paymentMethod;
-    private String status;
+    @Enumerated(EnumType.STRING) // lưu dưới dạng tên enum trong DB
+    private PaymentStatus status;
 
     @OneToOne
     @JoinColumn(name = "appointment_id")

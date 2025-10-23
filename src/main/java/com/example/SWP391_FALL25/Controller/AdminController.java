@@ -7,6 +7,7 @@ import com.example.SWP391_FALL25.DTO.Auth.DashboardStatsDTO;
 import com.example.SWP391_FALL25.DTO.Auth.PartTypeDTO;
 import com.example.SWP391_FALL25.DTO.Auth.MaintenancePlanDTO;
 import com.example.SWP391_FALL25.Entity.*;
+import com.example.SWP391_FALL25.Enum.PaymentStatus;
 import com.example.SWP391_FALL25.Repository.MaintenancePlanItemRepository;
 import com.example.SWP391_FALL25.Service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -189,7 +190,7 @@ public class AdminController {
     }
 
     @GetMapping("/payments/status/{status}")
-    public ResponseEntity<List<Payment>> getPaymentsByStatus(@PathVariable String status) {
+    public ResponseEntity<List<Payment>> getPaymentsByStatus(@PathVariable PaymentStatus status) {
         return ResponseEntity.ok(adminService.getPaymentsByStatus(status));
     }
 

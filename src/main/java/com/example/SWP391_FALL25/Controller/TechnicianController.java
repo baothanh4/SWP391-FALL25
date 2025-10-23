@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/technician")
@@ -33,6 +34,37 @@ public class TechnicianController {
         return serviceAppointmentService.getAppointmentsByTechnician(techician.getFullname());
     }
 
+
+    @PostMapping("/inspection/start/{appointmentId}")
+    public ResponseEntity<?> startInspection(@PathVariable Long appointmentId) {
+        ServiceAppointment appointment = technicianService.startInspection(appointmentId);
+        return ResponseEntity.ok(Map.of(
+                "message", "Inspection started",
+                "appointment", appointment
+        ));
+    }
+
+    @PostMapping("/quotation/create/{reportId}")
+    public ResponseEntity<?> createQuotation(
+            @PathVariable Long reportId,
+            @RequestBody List<ServiceReportDetailDTO> quotationItems) {
+        List<ServiceReportDetails> details = technicianService.createQuotation(
+                reportId, quotationItems);
+        return ResponseEntity.ok(Map.of(
+                "message", "Quotation created and sent to customer",
+                "items", details
+        ));
+    }
+
+    @PostMapping("/repair/start/{appointmentId}")
+    public ResponseEntity<?> startRepair(@PathVariable Long appointmentId) {
+        ServiceAppointment appointment = technicianService.startRepair(appointmentId);
+        return ResponseEntity.ok(Map.of(
+                "message", "Repair work started",
+                "appointment", appointment
+        ));
+    }
+
     @PostMapping("/{reportId}/details")
     public ResponseEntity<?> addReportDetails(@PathVariable(name = "reportId") Long reportId, @RequestBody List<ServiceReportDetailDTO> detailDTOS){
         List<ServiceReportDetails> details=serviceAppointmentService.addReportDetails(reportId,detailDTOS);
@@ -49,4 +81,6 @@ public class TechnicianController {
     public ResponseEntity<?> updatePart(@PathVariable(name = "id")Long id, @RequestBody PartDTO dto){
         return ResponseEntity.ok(technicianService.updatePart(id,dto));
     }
+
+
 }

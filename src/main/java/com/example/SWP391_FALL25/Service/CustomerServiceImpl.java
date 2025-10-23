@@ -1,18 +1,16 @@
 package com.example.SWP391_FALL25.Service;
 
-import com.example.SWP391_FALL25.DTO.Auth.RegisterRequest;
-import com.example.SWP391_FALL25.DTO.Auth.VehicleDTO;
-import com.example.SWP391_FALL25.Entity.ServiceAppointment;
-import com.example.SWP391_FALL25.Entity.Users;
-import com.example.SWP391_FALL25.Entity.Vehicle;
-import com.example.SWP391_FALL25.Repository.ServiceAppointmentRepository;
-import com.example.SWP391_FALL25.Repository.UserRepository;
-import com.example.SWP391_FALL25.Repository.VehicleRepository;
+import com.example.SWP391_FALL25.DTO.Auth.*;
+import com.example.SWP391_FALL25.Entity.*;
+import com.example.SWP391_FALL25.Repository.*;
+import com.example.SWP391_FALL25.Enum.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.ArrayList;
 
 @Service
 public class CustomerServiceImpl implements CustomerService{
@@ -29,6 +27,11 @@ public class CustomerServiceImpl implements CustomerService{
     @Autowired
     private ServiceAppointmentRepository serviceAppointmentRepository;
 
+    @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     @Override
     public Vehicle addCar(Long customerID, VehicleDTO vehicleDTO) {
@@ -95,6 +98,129 @@ public class CustomerServiceImpl implements CustomerService{
     @Override
     public List<ServiceAppointment> getAppointmentByUser(Long userId){
         return serviceAppointmentRepository.findByUserId(userId);
+    }
+
+
+    public QuotationResponseDTO getQuotation(Long appointmentId) {
+        ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (appointment.getReport() == null) {
+            throw new RuntimeException("No report found");
+        }
+
+        ServiceReport report = appointment.getReport();
+        List<ServiceReportDetails> details = report.getDetails();
+
+        List<QuotationItemDTO> items = new ArrayList<>();
+        double totalLabor = 0;
+        double totalPart = 0;
+
+        for (ServiceReportDetails detail : details) {
+            QuotationItemDTO item = new QuotationItemDTO();
+            item.setDetailId(detail.getId());
+            item.setService(detail.getService());
+            item.setActionType(detail.getActionType());
+            item.setConditionStatus(detail.getConditionStatus());
+            item.setPartName(detail.getPart() != null ? detail.getPart().getName() : "N/A");
+            item.setPartPrice(detail.getPartCost());
+            item.setLaborCost(detail.getLaborCost());
+            item.setSubtotal(detail.getTotalCost());
+
+            items.add(item);
+            totalLabor += detail.getLaborCost();
+            totalPart += detail.getPartCost();
+        }
+
+        QuotationResponseDTO response = new QuotationResponseDTO();
+        response.setAppointmentId(appointmentId);
+        response.setReportId(report.getId());
+        response.setInspectionDate(report.getReportDate());
+        response.setVehicleInfo(appointment.getVehicle().getBrand() + " " +
+                appointment.getVehicle().getModel());
+        response.setItems(items);
+        response.setTotalLaborCost(totalLabor);
+        response.setTotalPartCost(totalPart);
+        response.setGrandTotal(totalLabor + totalPart);
+        response.setStatus(appointment.getStatus().name());
+
+        return response;
+    }
+
+    @Transactional
+    public ServiceAppointment approveQuotation(Long appointmentId, String paymentMethod) {
+        ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (appointment.getStatus() != AppointmentStatus.QUOTATION_SENT) {
+            throw new RuntimeException("Quotation not sent yet");
+        }
+
+        // Cập nhật payment method
+        Payment payment = paymentRepository.findByAppointmentId(appointmentId);
+        if (payment != null) {
+            payment.setPaymentMethod(paymentMethod);
+            payment.setStatus(PaymentStatus.PENDING); // Chuyển từ QUOTATION sang PENDING
+            paymentRepository.save(payment);
+        }
+
+        // Cập nhật trạng thái
+        appointment.setStatus(AppointmentStatus.APPROVED);
+        serviceAppointmentRepository.save(appointment);
+
+        // Gửi email xác nhận
+        sendApprovalEmail(appointment);
+
+        return appointment;
+    }
+
+    @Transactional
+    public ServiceAppointment rejectQuotation(Long appointmentId, String reason) {
+        ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+        serviceAppointmentRepository.save(appointment);
+
+        // Có thể lưu lý do từ chối vào note hoặc comment
+        sendRejectionEmail(appointment, reason);
+
+        return appointment;
+    }
+
+    private void sendApprovalEmail(ServiceAppointment appointment) {
+        try {
+            String to = appointment.getVehicle().getCustomer().getEmail();
+            String subject = "Xác nhận duyệt báo giá";
+            String body = String.format(
+                    "Kính gửi %s,\n\n" +
+                            "Cảm ơn bạn đã xác nhận báo giá. Chúng tôi sẽ bắt đầu tiến hành sửa chữa xe của bạn.\n\n" +
+                            "Trân trọng,\nĐội ngũ kỹ thuật",
+                    appointment.getVehicle().getCustomer().getFullname()
+            );
+            emailService.sendEmail(to, subject, body);
+        } catch (Exception e) {
+            System.err.println("Failed to send approval email: " + e.getMessage());
+        }
+    }
+
+    private void sendRejectionEmail(ServiceAppointment appointment, String reason) {
+        try {
+            String to = appointment.getVehicle().getCustomer().getEmail();
+            String subject = "Thông báo hủy dịch vụ";
+            String body = String.format(
+                    "Kính gửi %s,\n\n" +
+                            "Chúng tôi đã nhận được yêu cầu hủy dịch vụ của bạn.\n" +
+                            "Lý do: %s\n\n" +
+                            "Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ.\n\n" +
+                            "Trân trọng,\nĐội ngũ CSKH",
+                    appointment.getVehicle().getCustomer().getFullname(),
+                    reason
+            );
+            emailService.sendEmail(to, subject, body);
+        } catch (Exception e) {
+            System.err.println("Failed to send rejection email: " + e.getMessage());
+        }
     }
 
 }

@@ -8,6 +8,7 @@ import com.example.SWP391_FALL25.DTO.Auth.MaintenancePlanDTO;
 import com.example.SWP391_FALL25.DTO.Auth.PartTypeDTO;
 import com.example.SWP391_FALL25.Entity.*;
 import com.example.SWP391_FALL25.Enum.AppointmentStatus;
+import com.example.SWP391_FALL25.Enum.PaymentStatus;
 import com.example.SWP391_FALL25.Enum.Role;
 import com.example.SWP391_FALL25.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -344,9 +345,9 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public List<Payment> getPaymentsByStatus(String status) {
+    public List<Payment> getPaymentsByStatus(PaymentStatus status) {
         return paymentRepository.findAll().stream()
-                .filter(payment -> payment.getStatus().equalsIgnoreCase(status))
+                .filter(payment -> payment.getStatus() == status)
                 .collect(Collectors.toList());
     }
 
@@ -367,7 +368,7 @@ public class AdminServiceImpl implements AdminService {
         stats.setCompletedAppointments(getAppointmentsByStatus("COMPLETED").size());
 
         // Revenue
-        List<Payment> completedPayments = getPaymentsByStatus("COMPLETED");
+        List<Payment> completedPayments = getPaymentsByStatus(PaymentStatus.COMPLETED);
         double totalRevenue = completedPayments.stream()
                 .mapToDouble(Payment::getAmount)
                 .sum();
@@ -382,7 +383,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public Double getTotalRevenue(String startDate, String endDate) {
-        List<Payment> payments = getPaymentsByStatus("COMPLETED");
+        List<Payment> payments = getPaymentsByStatus(PaymentStatus.COMPLETED);
 
         if (startDate != null && endDate != null) {
             LocalDate start = LocalDate.parse(startDate);

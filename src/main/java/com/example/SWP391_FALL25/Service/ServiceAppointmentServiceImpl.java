@@ -4,6 +4,7 @@ import com.example.SWP391_FALL25.DTO.Auth.ServiceAppointmentDTO;
 import com.example.SWP391_FALL25.DTO.Auth.ServiceReportDetailDTO;
 import com.example.SWP391_FALL25.Entity.*;
 import com.example.SWP391_FALL25.Enum.AppointmentStatus;
+import com.example.SWP391_FALL25.Enum.PaymentStatus;
 import com.example.SWP391_FALL25.Repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -225,7 +226,7 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
             payment = new Payment();
             payment.setAppointment(appointment);
             payment.setAmount(totalCost);
-            payment.setStatus("PENDING");
+            payment.setStatus(PaymentStatus.PENDING);
             paymentRepository.save(payment);
         } else {
             payment.setAmount(totalCost);

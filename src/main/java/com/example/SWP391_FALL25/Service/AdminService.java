@@ -7,6 +7,7 @@ import com.example.SWP391_FALL25.DTO.Auth.DashboardStatsDTO;
 import com.example.SWP391_FALL25.DTO.Auth.PartTypeDTO;
 import com.example.SWP391_FALL25.DTO.Auth.MaintenancePlanDTO;
 import com.example.SWP391_FALL25.Entity.*;
+import com.example.SWP391_FALL25.Enum.PaymentStatus;
 
 import java.util.List;
 import java.util.Map;
@@ -55,7 +56,7 @@ public interface AdminService {
 
     // Payments Management
     List<Payment> getAllPayments();
-    List<Payment> getPaymentsByStatus(String status);
+    List<Payment> getPaymentsByStatus(PaymentStatus status);
 
     // Statistics & Reports
     DashboardStatsDTO getDashboardStats();

@@ -3,6 +3,7 @@ package com.example.SWP391_FALL25.Service;
 import com.example.SWP391_FALL25.Entity.Payment;
 import com.example.SWP391_FALL25.Entity.ServiceAppointment;
 import com.example.SWP391_FALL25.Enum.AppointmentStatus;
+import com.example.SWP391_FALL25.Enum.PaymentStatus;
 import com.example.SWP391_FALL25.Repository.PaymentRepository;
 import com.example.SWP391_FALL25.Repository.ServiceAppointmentRepository;
 import com.example.SWP391_FALL25.Utility.VNPayUtils;
@@ -58,7 +59,7 @@ public class PaymentServiceImpl implements PaymentService{
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
 
-        payment.setStatus("COMPLETED");
+        payment.setStatus(PaymentStatus.COMPLETED);
         paymentRepository.save(payment);
 
         // ✅ Cập nhật trạng thái của appointment
@@ -79,7 +80,7 @@ public class PaymentServiceImpl implements PaymentService{
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
 
-        payment.setStatus("COMPLETED");
+        payment.setStatus(PaymentStatus.COMPLETED);
         paymentRepository.save(payment);
 
         ServiceAppointment appointment = payment.getAppointment();
@@ -108,7 +109,7 @@ public class PaymentServiceImpl implements PaymentService{
                     Math.round(payment.getAmount())
             );
 
-            payment.setStatus("PENDING");
+            payment.setStatus(PaymentStatus.PENDING);
             paymentRepository.save(payment);
 
             Map<String, Object> result = new HashMap<>();
