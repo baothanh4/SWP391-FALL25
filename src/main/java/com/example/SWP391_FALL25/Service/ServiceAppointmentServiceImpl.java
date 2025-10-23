@@ -157,8 +157,19 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
             details.setActionType(dto.getActionType());
             details.setConditionStatus(dto.getConditionStatus());
             details.setLaborCost(dto.getLaborCost());
-            details.setPartCost(part != null ? part.getPrice() : 0.0);
-            details.setTotalCost(details.getLaborCost() + details.getPartCost());
+            if(part!=null){
+                int usedQuantity=dto.getQuantity();
+                if(part.getQuantity()<usedQuantity){
+                    throw new RuntimeException("Not enough parts in stock");
+                }
+
+                part.setQuantity(part.getQuantity()-usedQuantity);
+                partRepository.save(part);
+
+                details.setPartCost(part.getPrice()*usedQuantity);
+            }
+            details.setQuantity(dto.getQuantity());
+            details.setTotalCost(details.getLaborCost()+details.getPartCost());
 
             savedDetails.add(serviceReportDetailsRepository.save(details));
         }
@@ -190,11 +201,27 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
         if(dto.getLaborCost()!=0.0){
             detail.setLaborCost(dto.getLaborCost());
         }
-        if(dto.getPartCost()!=0.0){
-            detail.setPartCost(dto.getPartCost());
-        }
-        detail.setTotalCost((dto.getLaborCost()!=0.0?dto.getLaborCost():0.0)+(dto.getPartCost()!=0.0?dto.getPartCost():0.0));
+        if(dto.getQuantity()>0){
+            int oldQuantity=detail.getQuantity();
+            int newQuantity=dto.getQuantity();
 
+            Part part=detail.getPart();
+            if(part!=null){
+                part.setQuantity(part.getQuantity()+oldQuantity);
+
+                if(part.getQuantity()<newQuantity){
+                    throw new RuntimeException("Not enough parts in stock"+part.getName());
+                }
+                part.setQuantity(part.getQuantity()-newQuantity);
+                partRepository.save(part);
+                detail.setPartCost(part.getPrice()*newQuantity);
+            }
+
+            detail.setQuantity(newQuantity);
+        }
+        double laborCost=dto.getLaborCost()!=0.0?dto.getLaborCost():detail.getLaborCost();
+        double partCost=detail.getPartCost()!=0.0?detail.getPartCost():0.0;
+        detail.setTotalCost(laborCost+partCost);
         if(dto.getPartId()!=null){
             Part part=partRepository.findById(dto.getPartId()).orElseThrow(()->new RuntimeException("Part not found"));
             detail.setPart(part);

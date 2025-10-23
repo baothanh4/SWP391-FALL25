@@ -7,5 +7,6 @@ public enum PaymentStatus {
     COMPLETED,         // Đã thanh toán
     FAILED,            // Thanh toán thất bại
     REFUNDED,
-    CANCELED
+    CANCELED,
+    PAID
 }
