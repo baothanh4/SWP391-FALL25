@@ -25,7 +25,7 @@ public class Vehicle {
     private String brand;
     private String model;
     private Integer year;
-    private String odometer;
+    private Integer odometer;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")

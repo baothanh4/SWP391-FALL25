@@ -15,6 +15,6 @@ public class VehicleDTO {
     private String brand;
     private String model;
     private Integer year;
-    private String odometer;
+    private Integer odometer;
 
 }

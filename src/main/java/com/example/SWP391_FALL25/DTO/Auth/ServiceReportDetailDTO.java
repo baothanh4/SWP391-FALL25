@@ -13,4 +13,6 @@ public class ServiceReportDetailDTO {
     private int quantity;
     private double laborCost;
     private double partCost;
+
+    private Integer currentKm;
 }
