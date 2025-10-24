@@ -138,43 +138,50 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
         ServiceAppointment appointment = report.getAppointment();
+        Vehicle vehicle = appointment.getVehicle();
+
         if (!AppointmentStatus.IN_PROGRESS.equals(appointment.getStatus())) {
             appointment.setStatus(AppointmentStatus.IN_PROGRESS);
             serviceAppointmentRepository.save(appointment);
         }
 
-        List<ServiceReportDetails> savedDetails = new ArrayList<>();
-        for (ServiceReportDetailDTO dto : reportDTO) {
-            Part part = (dto.getPartId() != null) ? partRepository.findById(dto.getPartId()).orElse(null) : null;
-            MaintenancePlanItem item = (dto.getMaintenanceItemId() != null)
-                    ? maintenancePlanItemRepository.findById(dto.getMaintenanceItemId()).orElse(null) : null;
+        Integer currentKm = reportDTO.get(0).getCurrentKm();
+        if (currentKm == null) {
+            throw new RuntimeException("Current(Km) must be provided");
+        }
 
+        // 🔍 Xác định plan tương ứng với KM hiện tại
+        MaintenancePlan plan = maintenancePlanRepository
+                .findTopByIntervalKmLessThanEqualOrderByIntervalKmDesc(currentKm)
+                .orElseThrow(() -> new RuntimeException("No matching maintenance plan found"));
+
+        List<MaintenancePlanItem> items = maintenancePlanItemRepository.findByMaintenancePlan(plan);
+
+        List<ServiceReportDetails> savedDetails = new ArrayList<>();
+        for (MaintenancePlanItem item : items) {
             ServiceReportDetails details = new ServiceReportDetails();
             details.setReport(report);
-            details.setPart(part);
             details.setMaintenancePlanItem(item);
-            details.setService(dto.getService());
-            details.setActionType(dto.getActionType());
-            details.setConditionStatus(dto.getConditionStatus());
-            details.setLaborCost(dto.getLaborCost());
-            if(part!=null){
-                int usedQuantity=dto.getQuantity();
-                if(part.getQuantity()<usedQuantity){
-                    throw new RuntimeException("Not enough parts in stock");
-                }
+            details.setService(item.getTaskName()); // ✅ chỉ set service theo task
+            details.setActionType(null); // chưa có hành động
+            details.setConditionStatus(null); // chưa kiểm tra tình trạng
+            details.setLaborCost(0.0);
+            details.setPartCost(0.0);
+            details.setQuantity(0);
 
-                part.setQuantity(part.getQuantity()-usedQuantity);
-                partRepository.save(part);
-
-                details.setPartCost(part.getPrice()*usedQuantity);
-            }
-            details.setQuantity(dto.getQuantity());
-            details.setTotalCost(details.getLaborCost()+details.getPartCost());
+            // 🚫 Không trừ phụ tùng ở bước này — chỉ thực hiện khi update
+            details.setPart(null);
+            details.setTotalCost(0.0);
 
             savedDetails.add(serviceReportDetailsRepository.save(details));
         }
 
+        // ✅ Cập nhật reminder lần kế tiếp
+        updateNextReminder(vehicle, plan);
+
+        // ✅ Cập nhật lại thanh toán (nếu cần)
         updatePaymentForAppointment(reportId);
+
         return savedDetails;
     }
 
@@ -187,54 +194,61 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
 
     @Override
     public ServiceReportDetails updateReportDetails(Long detailsId, ServiceReportDetailDTO dto){
-        ServiceReportDetails detail=serviceReportDetailsRepository.findById(detailsId).orElseThrow(()->new RuntimeException("Detail not found"));
+        ServiceReportDetails detail = serviceReportDetailsRepository.findById(detailsId)
+                .orElseThrow(() -> new RuntimeException("Detail not found"));
 
-        if(dto.getService()!=null){
-            detail.setService(dto.getService());
-        }
-        if(dto.getActionType()!=null){
+        // ⚙️ service giữ nguyên (chỉ đổi nếu nhập lại số km → xử lý riêng ở chỗ khác)
+
+        if (dto.getActionType() != null) {
             detail.setActionType(dto.getActionType());
         }
-        if(dto.getConditionStatus()!=null){
+
+        if (dto.getConditionStatus() != null) {
             detail.setConditionStatus(dto.getConditionStatus());
         }
-        if(dto.getLaborCost()!=0.0){
+
+        if (dto.getLaborCost() != 0.0 && dto.getLaborCost() > 0) {
             detail.setLaborCost(dto.getLaborCost());
         }
-        if(dto.getQuantity()>0){
-            int oldQuantity=detail.getQuantity();
-            int newQuantity=dto.getQuantity();
 
-            Part part=detail.getPart();
-            if(part!=null){
-                part.setQuantity(part.getQuantity()+oldQuantity);
+        if (dto.getPartId() != null) {
+            Part part = partRepository.findById(dto.getPartId())
+                    .orElseThrow(() -> new RuntimeException("Part not found"));
+            detail.setPart(part);
+        }
 
-                if(part.getQuantity()<newQuantity){
-                    throw new RuntimeException("Not enough parts in stock"+part.getName());
+        if (dto.getQuantity() != 0 && dto.getQuantity() > 0) {
+            int oldQuantity = detail.getQuantity();
+            int newQuantity = dto.getQuantity();
+
+            Part part = detail.getPart();
+            if (part != null) {
+                // Hoàn lại số cũ
+                part.setQuantity(part.getQuantity() + oldQuantity);
+
+                if (part.getQuantity() < newQuantity) {
+                    throw new RuntimeException("Not enough parts in stock: " + part.getName());
                 }
-                part.setQuantity(part.getQuantity()-newQuantity);
+
+                // Trừ số mới
+                part.setQuantity(part.getQuantity() - newQuantity);
                 partRepository.save(part);
-                detail.setPartCost(part.getPrice()*newQuantity);
+
+                detail.setPartCost(part.getPrice() * newQuantity);
             }
 
             detail.setQuantity(newQuantity);
         }
-        double laborCost=dto.getLaborCost()!=0.0?dto.getLaborCost():detail.getLaborCost();
-        double partCost=detail.getPartCost()!=0.0?detail.getPartCost():0.0;
-        detail.setTotalCost(laborCost+partCost);
-        if(dto.getPartId()!=null){
-            Part part=partRepository.findById(dto.getPartId()).orElseThrow(()->new RuntimeException("Part not found"));
-            detail.setPart(part);
-        }
-        if(dto.getMaintenanceItemId()!=null){
-            MaintenancePlanItem item=maintenancePlanItemRepository.findById(dto.getMaintenanceItemId()).orElseThrow(()->new RuntimeException("Maintenance item not found"));
-            detail.setMaintenancePlanItem(item);
-        }
 
-        ServiceReportDetails savedDetail=serviceReportDetailsRepository.save(detail);
+        // Tính lại tổng chi phí
+        double laborCost = detail.getLaborCost() != null ? detail.getLaborCost() : 0.0;
+        double partCost = detail.getPartCost() != null ? detail.getPartCost() : 0.0;
+        detail.setTotalCost(laborCost + partCost);
 
-        Long reportId=detail.getReport().getId();
-        updatePaymentForAppointment(reportId);
+        // Lưu thay đổi
+        ServiceReportDetails savedDetail = serviceReportDetailsRepository.save(detail);
+
+        updatePaymentForAppointment(detail.getReport().getId());
 
         return savedDetail;
     }
@@ -261,6 +275,19 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
         }
     }
 
+    private void updateNextReminder(Vehicle vehicle,MaintenancePlan currentPlan){
+        Integer nextKm=currentPlan.getIntervalKm()+5000;
+        MaintenancePlan nextPlan=maintenancePlanRepository.findTopByIntervalKmGreaterThanOrderByIntervalKmAsc(currentPlan.getIntervalKm()).orElse(null);
+
+        if(nextPlan!=null){
+            Reminder reminder=new Reminder();
+            reminder.setVehicle(vehicle);
+            reminder.setMaintenancePlan(nextPlan);
+            reminder.setReminderDate(LocalDate.now().plusMonths(nextPlan.getIntervalMonths()));
+            reminder.setStatus("PENDING");
+            reminderRepository.save(reminder);
+        }
+    }
 
 
 }

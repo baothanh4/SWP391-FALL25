@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface MaintenancePlanRepository extends JpaRepository<MaintenancePlan,Long> {
     Optional<MaintenancePlan> findByIntervalMonths(Integer intervalMonths);
+    Optional<MaintenancePlan> findTopByIntervalKmLessThanEqualOrderByIntervalKmDesc(Integer Od0meter);
+    Optional<MaintenancePlan> findTopByIntervalKmGreaterThanOrderByIntervalKmAsc(Integer currentKm);
 }
