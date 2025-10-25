@@ -4,6 +4,7 @@ import com.example.SWP391_FALL25.DTO.Auth.ServiceAppointmentDTO;
 import com.example.SWP391_FALL25.DTO.Auth.ServiceReportDetailDTO;
 import com.example.SWP391_FALL25.Entity.ServiceAppointment;
 import com.example.SWP391_FALL25.Entity.ServiceReportDetails;
+import jakarta.transaction.Transactional;
 
 import java.util.List;
 
@@ -19,4 +20,7 @@ public interface ServiceAppointmentService {
     List<ServiceAppointment> getAppointmentsByTechnician(String fullName);
 
     ServiceReportDetails updateReportDetails(Long detailsId, ServiceReportDetailDTO dto);
+
+    @Transactional
+    List<ServiceReportDetails> regenerateDetailsByKm(Long reportId, Integer currentKm);
 }

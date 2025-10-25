@@ -82,5 +82,15 @@ public class TechnicianController {
         return ResponseEntity.ok(technicianService.updatePart(id,dto));
     }
 
+    @PutMapping("/{reportId}/update-by-km")
+    public ResponseEntity<?> regenerateReportDetailsByKm(@PathVariable Long reportId,@RequestBody Map<String,Integer> request){
+        Integer currentKm=request.get("currentKm");
+        if(currentKm==null){
+            throw new RuntimeException("CurrentKm is required");
+        }
+
+        List<ServiceReportDetails> updatedDetails=serviceAppointmentService.regenerateDetailsByKm(reportId,currentKm);
+        return ResponseEntity.ok(updatedDetails);
+    }
 
 }

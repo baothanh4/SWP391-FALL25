@@ -253,6 +253,52 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
         return savedDetail;
     }
 
+    @Transactional
+    @Override
+    public List<ServiceReportDetails> regenerateDetailsByKm(Long reportId, Integer currentKm){
+        ServiceReport report=reportRepository.findById(reportId).orElseThrow(()->new  RuntimeException("Report not found"));
+
+        ServiceAppointment appointment=report.getAppointment();
+        Vehicle vehicle=appointment.getVehicle();
+
+        List<ServiceReportDetails> oldDetails=serviceReportDetailsRepository.findByReport(report);
+        for(ServiceReportDetails d:oldDetails){
+            Part part=d.getPart();
+            if(part!=null && d.getQuantity()>0){
+                part.setQuantity(part.getQuantity()+d.getQuantity());
+                partRepository.save(part);
+            }
+            serviceReportDetailsRepository.delete(d);
+        }
+
+        MaintenancePlan plan=maintenancePlanRepository.findTopByIntervalKmLessThanEqualOrderByIntervalKmDesc(currentKm).orElseThrow(()->new RuntimeException("No matching maintenance plan found"));
+
+        List<MaintenancePlanItem> items=maintenancePlanItemRepository.findByMaintenancePlan(plan);
+
+        List<ServiceReportDetails> savedDetails=new ArrayList<>();
+        for(MaintenancePlanItem item:items){
+            ServiceReportDetails details=new  ServiceReportDetails();
+            details.setReport(report);
+            details.setMaintenancePlanItem(item);
+            details.setService(item.getTaskName());
+            details.setActionType(null);
+            details.setConditionStatus(null);
+            details.setLaborCost(0.0);
+            details.setPartCost(0.0);
+            details.setQuantity(0);
+            details.setPart(null);
+            details.setTotalCost(0.0);
+
+            savedDetails.add(serviceReportDetailsRepository.save(details));
+        }
+
+        updateNextReminder(vehicle,plan);
+
+        updatePaymentForAppointment(reportId);
+        return savedDetails;
+
+    }
+
 
     private void updatePaymentForAppointment(Long reportId) {
         Double totalCost = serviceReportDetailsRepository.calculateTotalByReportId(reportId);
