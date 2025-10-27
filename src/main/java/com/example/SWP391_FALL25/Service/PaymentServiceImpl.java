@@ -40,19 +40,19 @@ public class PaymentServiceImpl implements PaymentService{
         Map<String, String> vnpParams = VNPayUtils.getVNPayResponseParams(request);
         String vnpSecureHash = vnpParams.get("vnp_SecureHash");
 
-        // ✅ Xác minh chữ ký
+
         boolean isValid = VNPayUtils.verifySignature(vnpParams, vnpSecureHash, VNP_HASH_SECRET);
         if (!isValid) {
             throw new RuntimeException("Invalid signature");
         }
 
-        // ✅ Kiểm tra mã phản hồi
+
         String responseCode = vnpParams.get("vnp_ResponseCode");
         if (!"00".equals(responseCode)) {
             throw new RuntimeException("Payment failed with code: " + responseCode);
         }
 
-        // ✅ Lấy paymentId từ vnp_OrderInfo
+
         String orderInfo = vnpParams.get("vnp_OrderInfo").replace("Thanh toan cho ma GD: ", "").trim();
         Long paymentId = Long.parseLong(orderInfo);
 
@@ -62,14 +62,14 @@ public class PaymentServiceImpl implements PaymentService{
         payment.setStatus(PaymentStatus.COMPLETED);
         paymentRepository.save(payment);
 
-        // ✅ Cập nhật trạng thái của appointment
+
         ServiceAppointment appointment = payment.getAppointment();
         if (appointment != null) {
             appointment.setStatus(AppointmentStatus.COMPLETED);
             serviceAppointmentRepository.save(appointment);
         }
 
-        // ✅ Redirect về React
+
         return "http://localhost:5173/payment?paymentId=" + paymentId + "&status=success";
     }
 
