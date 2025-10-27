@@ -33,6 +33,19 @@ public class CustomerServiceImpl implements CustomerService{
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private ServiceReportDetailsRepository serviceReportDetailsRepository;
+
+    @Autowired
+    private PartRepository partRepository;
+
+    @Autowired
+    private ReportRepository reportRepository;
+
+    @Autowired
+    private ReminderRepository reminderRepository;
+
+
     @Override
     public Vehicle addCar(Long customerID, VehicleDTO vehicleDTO) {
         Users users=userRepository.findById(customerID).orElseThrow(()->new RuntimeException("Customer not found"));
@@ -100,7 +113,7 @@ public class CustomerServiceImpl implements CustomerService{
         return serviceAppointmentRepository.findByUserId(userId);
     }
 
-
+    @Override
     public QuotationResponseDTO getQuotation(Long appointmentId) {
         ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
@@ -148,6 +161,7 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Transactional
+    @Override
     public ServiceAppointment approveQuotation(Long appointmentId, String paymentMethod) {
         ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
@@ -175,18 +189,59 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Transactional
+    @Override
     public ServiceAppointment rejectQuotation(Long appointmentId, String reason) {
         ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
+        if("ASSIGNED".equalsIgnoreCase(appointment.getStatus().name())){
+            throw new RuntimeException("Cannot cancel appointment because status is ASSIGNED");
+        }
+
+        if(!"PENDING".equalsIgnoreCase(appointment.getStatus().name())){
+            throw new RuntimeException("Appointment cannot be cancelled");
+        }
+
         appointment.setStatus(AppointmentStatus.CANCELLED);
         serviceAppointmentRepository.save(appointment);
 
-        // Có thể lưu lý do từ chối vào note hoặc comment
+        ServiceReport report=appointment.getReport();
+        if(report!=null){
+            List<ServiceReportDetails> details=serviceReportDetailsRepository.findByReport(report);
+            for(ServiceReportDetails d:details){
+                if(d.getPart()!=null && d.getQuantity()>0){
+                    Part part = d.getPart();
+                    part.setQuantity(part.getQuantity()+d.getQuantity());
+                    partRepository.save(part);
+                }
+                serviceReportDetailsRepository.delete(d);
+            }
+            reportRepository.delete(report);
+        }
+
+        Payment payment=paymentRepository.findByAppointmentId(appointmentId);
+        if(payment!=null){
+            paymentRepository.delete(payment);
+        }
+
+        List<Reminder> reminders=reminderRepository.findByVehicle(appointment.getVehicle());
+        for(Reminder reminder:reminders){
+            if(!"DONE".equalsIgnoreCase(reminder.getStatus())){
+                reminderRepository.delete(reminder);
+            }
+        }
+        if(appointment.getTechnicianAssigned()!=null){
+            appointment.setTechnicianAssigned(null);
+        }
+
         sendRejectionEmail(appointment, reason);
 
+        serviceAppointmentRepository.save(appointment);
         return appointment;
     }
+
+
+
 
     private void sendApprovalEmail(ServiceAppointment appointment) {
         try {

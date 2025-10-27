@@ -11,6 +11,7 @@ import com.example.SWP391_FALL25.Service.CustomerService;
 import com.example.SWP391_FALL25.Service.ServiceAppointmentService;
 import com.example.SWP391_FALL25.Service.ServiceCenterService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -98,5 +99,7 @@ public class CustomerController {
                 "appointment", appointment
         ));
     }
+
+
 
 }

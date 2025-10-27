@@ -7,6 +7,7 @@ import com.example.SWP391_FALL25.Entity.ServiceAppointment;
 import com.example.SWP391_FALL25.Entity.Users;
 import com.example.SWP391_FALL25.Entity.Vehicle;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,4 +28,6 @@ public interface CustomerService {
     ServiceAppointment approveQuotation(Long appointmentId, String paymentMethod);
 
     ServiceAppointment rejectQuotation(Long appointmentId, String reason);
+
+
 }
