@@ -21,7 +21,7 @@ public class ServiceReportDetails {
     private String service;
     private String actionType;
     private String conditionStatus;
-    private int quantity;
+    private Integer quantity;
     private Double laborCost;
     private Double partCost;
     private Double totalCost;
