@@ -68,9 +68,9 @@ public class TechnicianServiceImpl implements TechnicianService{
     }
 
     @Transactional
-    public List<ServiceReportDetails> createQuotation(
+    public List<ServiceReportDetails> createDetailTotalCostReport(
             Long reportId,
-            List<ServiceReportDetailDTO> quotationItems) {
+            List<ServiceReportDetailDTO> detailTotalCostItems) {
 
         ServiceReport report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
@@ -83,7 +83,7 @@ public class TechnicianServiceImpl implements TechnicianService{
 
         List<ServiceReportDetails> savedDetails = new ArrayList<>();
 
-        for (ServiceReportDetailDTO dto : quotationItems) {
+        for (ServiceReportDetailDTO dto : detailTotalCostItems) {
             Part part = (dto.getPartId() != null)
                     ? partRepository.findById(dto.getPartId()).orElse(null)
                     : null;
@@ -126,7 +126,7 @@ public class TechnicianServiceImpl implements TechnicianService{
         appointmentRepository.save(appointment);
 
         // Gửi email thông báo cho khách hàng
-        sendQuotationEmail(appointment, totalCost);
+        sendDetailTotalCostEmail(appointment, totalCost);
 
         return savedDetails;
     }
@@ -138,14 +138,14 @@ public class TechnicianServiceImpl implements TechnicianService{
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
         if (appointment.getStatus() != AppointmentStatus.APPROVED) {
-            throw new RuntimeException("Quotation must be approved first");
+            throw new RuntimeException("Deatail total cost report must be approved first");
         }
 
         appointment.setStatus(AppointmentStatus.IN_PROGRESS);
         return appointmentRepository.save(appointment);
     }
 
-    private void sendQuotationEmail(ServiceAppointment appointment, Double totalCost) {
+    private void sendDetailTotalCostEmail(ServiceAppointment appointment, Double totalCost) {
         try {
             String to = appointment.getVehicle().getCustomer().getEmail();
             String subject = "Báo giá sửa chữa xe - " + appointment.getVehicle().getLicensePlate();

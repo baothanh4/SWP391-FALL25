@@ -44,14 +44,14 @@ public class TechnicianController {
         ));
     }
 
-    @PostMapping("/quotation/create/{reportId}")
-    public ResponseEntity<?> createQuotation(
+    @PostMapping("/totalcost/create/{reportId}")
+    public ResponseEntity<?> createDetailTotalCostReport(
             @PathVariable Long reportId,
-            @RequestBody List<ServiceReportDetailDTO> quotationItems) {
-        List<ServiceReportDetails> details = technicianService.createQuotation(
-                reportId, quotationItems);
+            @RequestBody List<ServiceReportDetailDTO> detailTotalCostItems) {
+        List<ServiceReportDetails> details = technicianService.createDetailTotalCostReport(
+                reportId, detailTotalCostItems);
         return ResponseEntity.ok(Map.of(
-                "message", "Quotation created and sent to customer",
+                "message", "Detail total cost report created and sent to customer",
                 "items", details
         ));
     }

@@ -154,7 +154,7 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
-    public QuotationResponseDTO getQuotation(Long appointmentId) {
+    public DetailTotalCostResponseDTO getDetailTotalCostReport(Long appointmentId) {
         ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
@@ -165,12 +165,12 @@ public class CustomerServiceImpl implements CustomerService{
         ServiceReport report = appointment.getReport();
         List<ServiceReportDetails> details = report.getDetails();
 
-        List<QuotationItemDTO> items = new ArrayList<>();
+        List<DetailTotalCostItemDTO> items = new ArrayList<>();
         double totalLabor = 0;
         double totalPart = 0;
 
         for (ServiceReportDetails detail : details) {
-            QuotationItemDTO item = new QuotationItemDTO();
+            DetailTotalCostItemDTO item = new DetailTotalCostItemDTO();
             item.setDetailId(detail.getId());
             item.setService(detail.getService());
             item.setActionType(detail.getActionType());
@@ -185,7 +185,7 @@ public class CustomerServiceImpl implements CustomerService{
             totalPart += detail.getPartCost();
         }
 
-        QuotationResponseDTO response = new QuotationResponseDTO();
+        DetailTotalCostResponseDTO response = new DetailTotalCostResponseDTO();
         response.setAppointmentId(appointmentId);
         response.setReportId(report.getId());
         response.setInspectionDate(report.getReportDate());
@@ -202,7 +202,7 @@ public class CustomerServiceImpl implements CustomerService{
 
     @Transactional
     @Override
-    public ServiceAppointment approveQuotation(Long appointmentId, String paymentMethod) {
+    public ServiceAppointment approveDetailTotalCostReport(Long appointmentId, String paymentMethod) {
         ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
@@ -230,7 +230,7 @@ public class CustomerServiceImpl implements CustomerService{
 
     @Transactional
     @Override
-    public ServiceAppointment rejectQuotation(Long appointmentId, String reason) {
+    public ServiceAppointment rejectDetailTotalCostReport(Long appointmentId, String reason) {
         ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 

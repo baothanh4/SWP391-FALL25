@@ -13,7 +13,7 @@ public interface TechnicianService {
 
     ServiceAppointment startInspection(Long appointmentId);
 
-    List<ServiceReportDetails> createQuotation(Long reportId, List<ServiceReportDetailDTO> items);
+    List<ServiceReportDetails> createDetailTotalCostReport(Long reportId, List<ServiceReportDetailDTO> items);
 
     ServiceAppointment startRepair(Long appointmentId);
 

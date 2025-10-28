@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class QuotationItemDTO {
+public class DetailTotalCostItemDTO {
     private Long detailId;
     private String service;
     private String actionType;

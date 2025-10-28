@@ -1,7 +1,7 @@
 package com.example.SWP391_FALL25.Controller;
 
 
-import com.example.SWP391_FALL25.DTO.Auth.QuotationResponseDTO;
+import com.example.SWP391_FALL25.DTO.Auth.DetailTotalCostResponseDTO;
 import com.example.SWP391_FALL25.DTO.Auth.RegisterRequest;
 import com.example.SWP391_FALL25.DTO.Auth.ServiceAppointmentDTO;
 import com.example.SWP391_FALL25.DTO.Auth.VehicleDTO;
@@ -11,7 +11,6 @@ import com.example.SWP391_FALL25.Service.CustomerService;
 import com.example.SWP391_FALL25.Service.ServiceAppointmentService;
 import com.example.SWP391_FALL25.Service.ServiceCenterService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -68,34 +67,34 @@ public class CustomerController {
         return ResponseEntity.ok(appointments);
     }
 
-    @GetMapping("/quotation/{appointmentId}")
-    public ResponseEntity<QuotationResponseDTO> getQuotation(@PathVariable Long appointmentId) {
-        QuotationResponseDTO quotation = customerService.getQuotation(appointmentId);
-        return ResponseEntity.ok(quotation);
+    @GetMapping("/totalcost/{appointmentId}")
+    public ResponseEntity<DetailTotalCostResponseDTO> getQuotation(@PathVariable Long appointmentId) {
+        DetailTotalCostResponseDTO detailTotalCostReport = customerService.getDetailTotalCostReport(appointmentId);
+        return ResponseEntity.ok(detailTotalCostReport);
     }
 
-    @PostMapping("/quotation/{appointmentId}/approve")
+    @PostMapping("/totalcost/{appointmentId}/approve")
     public ResponseEntity<?> approveQuotation(
             @PathVariable Long appointmentId,
             @RequestBody Map<String, String> request) {
         String paymentMethod = request.getOrDefault("paymentMethod", "CASH");
-        ServiceAppointment appointment = customerService.approveQuotation(
+        ServiceAppointment appointment = customerService.approveDetailTotalCostReport(
                 appointmentId, paymentMethod);
         return ResponseEntity.ok(Map.of(
-                "message", "Quotation approved successfully",
+                "message", "Deatail total cost approved successfully",
                 "appointment", appointment
         ));
     }
 
-    @PostMapping("/quotation/{appointmentId}/reject")
+    @PostMapping("/totalcost/{appointmentId}/reject")
     public ResponseEntity<?> rejectQuotation(
             @PathVariable Long appointmentId,
             @RequestBody Map<String, String> request) {
         String reason = request.getOrDefault("reason", "No reason provided");
-        ServiceAppointment appointment = customerService.rejectQuotation(
+        ServiceAppointment appointment = customerService.rejectDetailTotalCostReport(
                 appointmentId, reason);
         return ResponseEntity.ok(Map.of(
-                "message", "Quotation rejected",
+                "message", "Deatail total cost rejected",
                 "appointment", appointment
         ));
     }

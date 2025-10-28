@@ -10,12 +10,12 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class QuotationResponseDTO {
+public class DetailTotalCostResponseDTO {
     private Long appointmentId;
     private Long reportId;
     private LocalDate inspectionDate;
     private String vehicleInfo;
-    private List<QuotationItemDTO> items;
+    private List<DetailTotalCostItemDTO> items;
     private Double totalLaborCost;
     private Double totalPartCost;
     private Double grandTotal;
