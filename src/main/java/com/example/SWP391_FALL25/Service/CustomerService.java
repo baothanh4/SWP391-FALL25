@@ -6,6 +6,7 @@ import com.example.SWP391_FALL25.DTO.Auth.VehicleDTO;
 import com.example.SWP391_FALL25.Entity.ServiceAppointment;
 import com.example.SWP391_FALL25.Entity.Users;
 import com.example.SWP391_FALL25.Entity.Vehicle;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,6 +23,9 @@ public interface CustomerService {
     List<ServiceAppointment> getAppointmentByUser(Long userId);
 
     DetailTotalCostResponseDTO getDetailTotalCostReport(Long appointmentId);
+
+    @Transactional
+    void cancelAppointment(Long appointmentId);
 
     ServiceAppointment approveDetailTotalCostReport(Long appointmentId, String paymentMethod);
 
