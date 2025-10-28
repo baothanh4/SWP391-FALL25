@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Optional;
 
 @Service
 public class CustomerServiceImpl implements CustomerService{
@@ -47,20 +48,59 @@ public class CustomerServiceImpl implements CustomerService{
 
 
     @Override
-    public Vehicle addCar(Long customerID, VehicleDTO vehicleDTO) {
-        Users users=userRepository.findById(customerID).orElseThrow(()->new RuntimeException("Customer not found"));
+    public Vehicle addCar(Long customerId, VehicleDTO vehicleDTO) {
+        String vin = vehicleDTO.getVin();
+        if (vin == null || vin.trim().isEmpty()) {
+            throw new RuntimeException("VIN must not be empty.");
+        }
 
-        Vehicle vehicle=new Vehicle();
-        vehicle.setVin(vehicleDTO.getVin());
-        vehicle.setLicensePlate(vehicleDTO.getLicensePlate());
-        vehicle.setBrand(vehicleDTO.getBrand());
-        vehicle.setModel(vehicleDTO.getModel());
-        vehicle.setOdometer(vehicleDTO.getOdometer());
-        vehicle.setYear(vehicleDTO.getYear());
-        vehicle.setCustomer(users);
 
-        return vehicleRepository.save(vehicle);
+        vin = vin.trim().toUpperCase();
+
+
+        if (!vin.matches("^[A-HJ-NPR-Z0-9]{17}$")) {
+            throw new RuntimeException("Invalid VIN format. VIN must have 17 characters (letters and numbers).");
+        }
+
+
+        Optional<Vehicle> optionalVehicle = vehicleRepository.findByVin(vin);
+
+
+        Users customer = userRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("Customer not found."));
+
+        if (optionalVehicle.isPresent()) {
+            Vehicle existingVehicle = optionalVehicle.get();
+
+            // Nếu xe đã có chủ khác
+            if (existingVehicle.getCustomer() != null &&
+                    !existingVehicle.getCustomer().getId().equals(customerId)) {
+                throw new RuntimeException("This vehicle (VIN) already belongs to another customer.");
+            }
+
+            // Nếu xe chưa có chủ thì gán chủ
+            if (existingVehicle.getCustomer() == null) {
+                existingVehicle.setCustomer(customer);
+                return vehicleRepository.save(existingVehicle);
+            }
+
+            // Nếu xe đã thuộc customer này rồi
+            return existingVehicle;
+        }
+
+        // Nếu VIN chưa tồn tại trong hệ thống → tạo xe mới
+        Vehicle newVehicle = new Vehicle();
+        newVehicle.setVin(vin);
+        newVehicle.setLicensePlate(vehicleDTO.getLicensePlate());
+        newVehicle.setBrand(vehicleDTO.getBrand());
+        newVehicle.setModel(vehicleDTO.getModel());
+        newVehicle.setOdometer(vehicleDTO.getOdometer());
+        newVehicle.setYear(vehicleDTO.getYear());
+        newVehicle.setCustomer(customer);
+
+        return vehicleRepository.save(newVehicle);
     }
+
 
     @Override
     public Users updateInformation(Long customerId, RegisterRequest request){
