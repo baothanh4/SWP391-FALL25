@@ -202,6 +202,64 @@ public class CustomerServiceImpl implements CustomerService{
 
     @Transactional
     @Override
+    public void cancelAppointment(Long appointmentId) {
+        ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+
+        if ("ASSIGNED".equalsIgnoreCase(appointment.getStatus().name())) {
+            throw new RuntimeException("Cannot cancel an assigned appointment.");
+        }
+
+        // ✅ Chỉ cho phép hủy nếu status là PENDING, CONFIRMED, hoặc SCHEDULED
+        if (!List.of("PENDING", "CONFIRMED", "SCHEDULED").contains(appointment.getStatus().name().toUpperCase())) {
+            throw new RuntimeException("Appointment cannot be canceled in current status: " + appointment.getStatus());
+        }
+
+
+        appointment.setStatus(AppointmentStatus.PENDING);
+        serviceAppointmentRepository.save(appointment);
+
+
+        ServiceReport report = appointment.getReport();
+        if (report != null) {
+            List<ServiceReportDetails> details = serviceReportDetailsRepository.findByReport(report);
+            for (ServiceReportDetails d : details) {
+                if (d.getPart() != null && d.getQuantity() > 0) {
+                    Part part = d.getPart();
+                    part.setQuantity(part.getQuantity() + d.getQuantity());
+                    partRepository.save(part);
+                }
+                serviceReportDetailsRepository.delete(d);
+            }
+            reportRepository.delete(report);
+        }
+
+        // Xóa payment nếu có
+        Payment payment = paymentRepository.findByAppointmentId(appointment.getId());
+        if (payment != null) {
+            paymentRepository.delete(payment);
+        }
+
+        // Xóa reminder chưa hoàn thành
+        List<Reminder> reminders = reminderRepository.findByVehicle(appointment.getVehicle());
+        for (Reminder reminder : reminders) {
+            if (!"COMPLETED".equalsIgnoreCase(reminder.getStatus())) {
+                reminderRepository.delete(reminder);
+            }
+        }
+
+        // Xóa nhân viên nếu có
+        if (appointment.getTechnicianAssigned() != null) {
+            appointment.setTechnicianAssigned(null);
+        }
+
+        serviceAppointmentRepository.save(appointment);
+    }
+
+
+    @Transactional
+    @Override
     public ServiceAppointment approveDetailTotalCostReport(Long appointmentId, String paymentMethod) {
         ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));

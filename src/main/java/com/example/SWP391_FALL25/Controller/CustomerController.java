@@ -11,6 +11,7 @@ import com.example.SWP391_FALL25.Service.CustomerService;
 import com.example.SWP391_FALL25.Service.ServiceAppointmentService;
 import com.example.SWP391_FALL25.Service.ServiceCenterService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -99,6 +100,14 @@ public class CustomerController {
         ));
     }
 
-
+    @PutMapping("/appointment/{Id}/cancel")
+    public ResponseEntity<?> cancelAppointment(@PathVariable(name = "Id") Long appointmentId) {
+        try {
+            customerService.cancelAppointment(appointmentId);
+            return ResponseEntity.ok("Appointment canceled successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 
 }
