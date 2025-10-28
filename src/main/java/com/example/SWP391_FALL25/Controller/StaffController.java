@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Controller;
 
 
+import com.example.SWP391_FALL25.DTO.Auth.AppointmentDTO;
 import com.example.SWP391_FALL25.Entity.ServiceAppointment;
 import com.example.SWP391_FALL25.Service.ServiceAppointmentService;
 import com.example.SWP391_FALL25.Service.StaffService;
@@ -28,7 +29,7 @@ public class StaffController {
 
     @GetMapping("/appointments")
     public ResponseEntity<?> getAllAppointments(){
-        List<ServiceAppointment> appointments = staffService.getAllAppointmentsSorted();
+        List<AppointmentDTO> appointments = staffService.getAllAppointments();
         return ResponseEntity.ok(appointments);
     }
 
