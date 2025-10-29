@@ -254,6 +254,7 @@ public class CustomerServiceImpl implements CustomerService{
             appointment.setTechnicianAssigned(null);
         }
 
+        sendCancelEmail(appointment);
         serviceAppointmentRepository.save(appointment);
     }
 
@@ -375,5 +376,28 @@ public class CustomerServiceImpl implements CustomerService{
             System.err.println("Failed to send rejection email: " + e.getMessage());
         }
     }
+
+    private void sendCancelEmail(ServiceAppointment appointment) {
+        try {
+            String to = appointment.getVehicle().getCustomer().getEmail();
+            String subject = "Thông báo hủy lịch hẹn dịch vụ";
+            String body = String.format(
+                    "Kính gửi %s,\n\n" +
+                            "Lịch hẹn dịch vụ của bạn cho xe %s (%s) đã được hủy thành công.\n" +
+                            "Ngày hẹn ban đầu: %s\n\n" +
+                            "Nếu bạn muốn đặt lại lịch mới, vui lòng truy cập hệ thống hoặc liên hệ với chúng tôi.\n\n" +
+                            "Trân trọng,\nĐội ngũ hỗ trợ khách hàng.",
+                    appointment.getVehicle().getCustomer().getFullname(),
+                    appointment.getVehicle().getBrand(),
+                    appointment.getVehicle().getModel(),
+                    appointment.getAppointmentDate()
+            );
+
+            emailService.sendEmail(to, subject, body);
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send cancel email: " + e.getMessage());
+        }
+    }
+
 
 }
