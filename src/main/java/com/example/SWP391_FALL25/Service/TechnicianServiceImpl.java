@@ -137,7 +137,7 @@ public class TechnicianServiceImpl implements TechnicianService{
         ServiceAppointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        if (appointment.getStatus() != AppointmentStatus.APPROVED) {
+        if (appointment.getStatus() != AppointmentStatus.ASSIGNED) {
             throw new RuntimeException("Deatail total cost report must be approved first");
         }
 
