@@ -46,6 +46,8 @@ public class CustomerServiceImpl implements CustomerService{
     @Autowired
     private ReminderRepository reminderRepository;
 
+    @Autowired
+    private SystemLogService systemLogService;
 
     @Override
     public Vehicle addCar(Long customerId, VehicleDTO vehicleDTO) {
@@ -98,6 +100,7 @@ public class CustomerServiceImpl implements CustomerService{
         newVehicle.setYear(vehicleDTO.getYear());
         newVehicle.setCustomer(customer);
 
+        systemLogService.log(customerId,"ADD VEHICLE");
         return vehicleRepository.save(newVehicle);
     }
 
@@ -122,6 +125,7 @@ public class CustomerServiceImpl implements CustomerService{
         if(request.getPassword()!=null && !request.getPassword().isEmpty()){
             users.setPassword(passwordEncoder.encode(request.getPassword()));
         }
+        systemLogService.log(users.getId(),"UPDATE INFORMATION");
         return userRepository.save(users);
     }
 
@@ -255,6 +259,7 @@ public class CustomerServiceImpl implements CustomerService{
         }
 
         sendCancelEmail(appointment);
+        systemLogService.log(appointment.getVehicle().getCustomer().getId(),"CANCELED APPOINTMENT");
         serviceAppointmentRepository.save(appointment);
     }
 

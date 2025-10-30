@@ -3,9 +3,11 @@ package com.example.SWP391_FALL25.Service;
 import com.example.SWP391_FALL25.Config.JwtTokenProvider;
 import com.example.SWP391_FALL25.DTO.Auth.*;
 import com.example.SWP391_FALL25.Entity.OtpToken;
+import com.example.SWP391_FALL25.Entity.SystemLog;
 import com.example.SWP391_FALL25.Entity.Users;
 import com.example.SWP391_FALL25.Enum.Role;
 import com.example.SWP391_FALL25.Repository.OtpTokenRepository;
+import com.example.SWP391_FALL25.Repository.SystemLogRepository;
 import com.example.SWP391_FALL25.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +47,9 @@ public class AuthServiceImpl implements AuthService{
 
     private final int OTP_EXPIRY_MINUTES = 15;
 
+    @Autowired
+    private SystemLogService systemLogService;
+
     @Override
     public LoginResponse login(LoginRequest request){
         Users users=userRepository.findByPhone(request.getPhone()).orElseThrow(()->new RuntimeException("User not found"));
@@ -54,7 +59,7 @@ public class AuthServiceImpl implements AuthService{
         }
 
         String token=jwtTokenProvider.generateToken(users.getPhone(), String.valueOf(users.getRole()));
-
+        systemLogService.log(users.getId(),"LOGIN");
         return new LoginResponse(users.getId(),
                 users.getPhone(),
                 users.getFullname(),
@@ -100,7 +105,7 @@ public class AuthServiceImpl implements AuthService{
         }
 
         String token = jwtTokenProvider.generateToken(users.getPhone(), users.getRole().name());
-
+        systemLogService.log(users.getId(),"REGISTER");
         return new LoginResponse(
                 users.getId(),
                 users.getPhone(),
@@ -203,5 +208,6 @@ public class AuthServiceImpl implements AuthService{
         otpTokenRepository.save(token);
         return true;
     }
+
 
 }

@@ -56,6 +56,9 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private SystemLogService systemLogService;
+
     @Override
     public ServiceAppointment createAppointment(Long vehicleId, Long serviceId, ServiceAppointmentDTO dto) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
@@ -94,6 +97,7 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
             System.err.println("❌ Không thể gửi email xác nhận: " + e.getMessage());
         }
 
+        systemLogService.log(vehicle.getCustomer().getId(),"BOOKING APPOINTMENT");
         return appointment;
     }
 
