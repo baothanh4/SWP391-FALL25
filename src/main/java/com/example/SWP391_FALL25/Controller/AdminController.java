@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -216,5 +217,15 @@ public class AdminController {
     @GetMapping("/maintenance-item")
     public ResponseEntity<?> getAllMaintenanceItems(){
         return ResponseEntity.ok(maintenancePlanItemRepository.findAll());
+    }
+
+    @GetMapping("/system-logs")
+    public ResponseEntity<List<SystemLog>> getAllSystemLogs() {
+        return ResponseEntity.ok(adminService.getAllSystemLog());
+    }
+
+    @GetMapping("/system-log/{id}")
+    public ResponseEntity<Optional<SystemLog>> getSystemLogById(@PathVariable(name = "id") Long id) {
+        return ResponseEntity.ok(adminService.getSystemLogById(id));
     }
 }

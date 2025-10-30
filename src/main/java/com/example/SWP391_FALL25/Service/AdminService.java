@@ -11,6 +11,7 @@ import com.example.SWP391_FALL25.Enum.PaymentStatus;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface AdminService {
 
@@ -41,6 +42,10 @@ public interface AdminService {
     PartType createPartType(PartTypeDTO dto);
     PartType updatePartType(Long id, PartTypeDTO dto);
     void deletePartType(Long id);
+
+    List<SystemLog> getAllSystemLog();
+
+    Optional<SystemLog> getSystemLogById(Long id);
 
     // Maintenance Plan Management
     List<MaintenancePlan> getAllMaintenancePlans();

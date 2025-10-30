@@ -50,7 +50,8 @@ public class AdminServiceImpl implements AdminService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-
+    @Autowired
+    private SystemLogRepository systemLogRepository;
 
     @Override
     public List<Users> getAllUsers() {
@@ -253,7 +254,15 @@ public class AdminServiceImpl implements AdminService {
         partTypeRepository.delete(partType);
     }
 
+    @Override
+    public List<SystemLog> getAllSystemLog(){
+        return systemLogRepository.findAll();
+    }
 
+    @Override
+    public Optional<SystemLog> getSystemLogById(Long id){
+        return systemLogRepository.findById(id);
+    }
 
     @Override
     public List<MaintenancePlan> getAllMaintenancePlans() {
