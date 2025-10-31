@@ -16,8 +16,10 @@ public interface ServiceAppointmentService {
 
     List<ServiceReportDetails> addReportDetails(Long reportId, List<ServiceReportDetailDTO> reportDTO);
 
-
     List<ServiceAppointment> getAppointmentsByTechnician(String fullName);
+
+    @Transactional
+    List<ServiceReportDetails> createDetailsByKm(Long reportId, Integer currentKm);
 
     ServiceReportDetails updateReportDetails(Long detailsId, ServiceReportDetailDTO dto);
 

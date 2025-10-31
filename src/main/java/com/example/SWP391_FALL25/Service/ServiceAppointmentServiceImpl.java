@@ -185,6 +185,78 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
         return serviceAppointmentRepository.findByTechnicianAssigned(fullName);
     }
 
+    @Transactional
+    public List<ServiceReportDetails> createDetailsByKm(Long reportId, Integer currentKm) {
+        ServiceReport report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+
+        ServiceAppointment appointment = report.getAppointment();
+        Vehicle vehicle = appointment.getVehicle();
+
+        // BƯỚC 1: Nhập số km
+        if (currentKm == null || currentKm <= 0) {
+            throw new RuntimeException("Current km must be provided and greater than 0");
+        }
+
+        // BƯỚC 2: Tìm MaintenancePlan phù hợp với km đã nhập
+        MaintenancePlan plan = maintenancePlanRepository
+                .findTopByIntervalKmLessThanEqualOrderByIntervalKmDesc(currentKm)
+                .orElseThrow(() -> new RuntimeException("No matching maintenance plan found for " + currentKm + " km"));
+
+        // BƯỚC 3: Lấy tất cả taskName từ MaintenancePlanItem
+        List<MaintenancePlanItem> items = maintenancePlanItemRepository.findByMaintenancePlan(plan);
+
+        if (items.isEmpty()) {
+            throw new RuntimeException("Maintenance plan has no items");
+        }
+
+        // BƯỚC 4: Tạo ServiceReportDetails với partCost dựa trên Part
+        List<ServiceReportDetails> savedDetails = new ArrayList<>();
+
+        for (MaintenancePlanItem item : items) {
+            ServiceReportDetails details = new ServiceReportDetails();
+            details.setReport(report);
+            details.setMaintenancePlanItem(item);
+            details.setService(item.getTaskName()); // Lấy taskName
+            details.setQuantity(1);
+            details.setLaborCost(0.0);
+
+            // BƯỚC 4: Tìm Part dựa trên partType của MaintenancePlanItem
+            Part part = null;
+            Double partCost = 0.0;
+
+            if (item.getPartType() != null && !item.getPartType().isEmpty()) {
+                // Tìm Part dựa trên tên partType
+                part = partRepository.findTopByPartType_Name(item.getPartType())
+                        .orElse(null);
+
+                if (part != null) {
+                    partCost = part.getPrice(); // lấy giá Part để tính total
+                    details.setPart(part);
+                }
+            }
+
+            details.setPartCost(partCost);
+            details.setTotalCost(details.getLaborCost() + partCost); // BƯỚC 5: Chưa có gì cả
+
+            details.setActionType("Đang kiem tra");
+            details.setConditionStatus("On Dinh");
+
+            savedDetails.add(serviceReportDetailsRepository.save(details));
+        }
+
+        // Update appointment status
+        if (!AppointmentStatus.INSPECTING.equals(appointment.getStatus())) {
+            appointment.setStatus(AppointmentStatus.INSPECTING);
+            serviceAppointmentRepository.save(appointment);
+        }
+
+        // Tạo reminder cho lần bảo dưỡng tiếp theo
+        updateNextReminder(vehicle, plan);
+
+        return savedDetails;
+    }
+
     @Override
     public ServiceReportDetails updateReportDetails(Long detailsId, ServiceReportDetailDTO dto){
         ServiceReportDetails detail = serviceReportDetailsRepository.findById(detailsId)

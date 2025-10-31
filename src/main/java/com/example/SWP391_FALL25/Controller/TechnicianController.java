@@ -71,6 +71,25 @@ public class TechnicianController {
         return ResponseEntity.ok(details);
     }
 
+    @PostMapping("/{reportId}/details/by-km")
+    public ResponseEntity<?> createReportDetailsByKm(
+            @PathVariable(name = "reportId") Long reportId,
+            @RequestBody Map<String, Integer> request) {
+
+        Integer currentKm = request.get("currentKm");
+        if (currentKm == null) {
+            throw new RuntimeException("currentKm is required");
+        }
+
+        // Tạo details từ MaintenancePlan dựa trên km
+        List<ServiceReportDetails> details = serviceAppointmentService.createDetailsByKm(reportId, currentKm);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Report details created from maintenance plan",
+                "items", details
+        ));
+    }
+
     @PatchMapping("/reports/details/{detailId}")
     public ResponseEntity<ServiceReportDetails> updateDetails(@PathVariable(name="detailId") Long detailId,@RequestBody ServiceReportDetailDTO dto){
         ServiceReportDetails details=serviceAppointmentService.updateReportDetails(detailId,dto);
