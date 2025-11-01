@@ -108,8 +108,8 @@ public class AuthServiceImpl implements AuthService{
     }
 
     @Override
-    public LoginResponse register(RegisterRequest request){
-        if(userRepository.findByPhone(request.getPhone()).isPresent()){
+    public LoginResponse register(RegisterRequest request) {
+        if (userRepository.findByPhone(request.getPhone()).isPresent()) {
             throw new RuntimeException("Phone number already exists");
         }
 
@@ -120,8 +120,16 @@ public class AuthServiceImpl implements AuthService{
         users.setEmail(request.getEmail());
         users.setAddress(request.getAddress());
         users.setDob(request.getDob());
+
+
+        users.setAccountLocked(false);
+        users.setFailAttempts(0);
+        users.setLockTime(null);
+
+
         Role role = Role.valueOf(request.getRole() != null ? request.getRole().toUpperCase() : "CUSTOMER");
         users.setRole(role);
+
 
         userRepository.save(users);
 
@@ -141,8 +149,10 @@ public class AuthServiceImpl implements AuthService{
             System.err.println("❌ Gửi email thất bại: " + e.getMessage());
         }
 
+
         String token = jwtTokenProvider.generateToken(users.getPhone(), users.getRole().name());
-        systemLogService.log(users.getId(),"REGISTER");
+        systemLogService.log(users.getId(), "REGISTER");
+
         return new LoginResponse(
                 users.getId(),
                 users.getPhone(),
@@ -154,6 +164,7 @@ public class AuthServiceImpl implements AuthService{
                 token
         );
     }
+
 
     @Override
     public List<Users> getAll(){
