@@ -45,29 +45,66 @@ public class AuthServiceImpl implements AuthService{
     private JavaMailSender mailSender;
     private final BCryptPasswordEncoder bCryptPasswordEncoder=new BCryptPasswordEncoder();
 
-    private final int OTP_EXPIRY_MINUTES = 15;
-
     @Autowired
     private SystemLogService systemLogService;
+
+    private final int OTP_EXPIRY_MINUTES = 15;
+    private static final int MAX_FAILED_ATTEMPTS=5;
+    private static final long LOCK_TIME_DURATION=15*60*1000;
 
     @Override
     public LoginResponse login(LoginRequest request){
         Users users=userRepository.findByPhone(request.getPhone()).orElseThrow(()->new RuntimeException("User not found"));
 
-        if(!passwordEncoder.matches(request.getPassword(), users.getPassword())){
-            throw new RuntimeException("Invalid password");
-        }
+       if(users.isAccountLocked()){
+           if(users.getLockTime()!=null){
+               long lockDuration=java.time.Duration.between(users.getLockTime(),LocalDateTime.now()).toMillis();
+               if(lockDuration>LOCK_TIME_DURATION){
+                   users.setAccountLocked(false);
+                   users.setFailAttempts(0);
+                   users.setLockTime(null);
+                   userRepository.save(users);
+               }else{
+                   throw new RuntimeException("Account is locked. Try again later");
+               }
+           }else{
+               throw new RuntimeException("Account is locked");
+           }
+       }
 
-        String token=jwtTokenProvider.generateToken(users.getPhone(), String.valueOf(users.getRole()));
-        systemLogService.log(users.getId(),"LOGIN");
-        return new LoginResponse(users.getId(),
-                users.getPhone(),
-                users.getFullname(),
-                users.getEmail(),
-                users.getRole().name(),
-                users.getAddress(),
-                users.getDob(),
-                token);
+       if(!passwordEncoder.matches(request.getPassword(),users.getPassword())){
+           int newFail=users.getFailAttempts()+1;
+           users.setFailAttempts(newFail);
+
+           if(newFail>=MAX_FAILED_ATTEMPTS){
+               users.setAccountLocked(true);
+               users.setLockTime(LocalDateTime.now());
+               userRepository.save(users);
+               throw new RuntimeException("Too many failed attempts. Account locked for 15 minutes");
+           }
+
+           userRepository.save(users);
+           throw new RuntimeException("Invalid password. Attempts "+newFail+" of "+MAX_FAILED_ATTEMPTS);
+       }
+
+       users.setFailAttempts(0);
+       users.setAccountLocked(false);
+       users.setLockTime(null);
+       userRepository.save(users);
+
+       String token=jwtTokenProvider.generateToken(users.getPhone(), String.valueOf(users.getRole().name()));
+       systemLogService.log(users.getId(), "LOGIN");
+
+       return new LoginResponse(
+               users.getId(),
+               users.getPhone(),
+               users.getFullname(),
+               users.getEmail(),
+               users.getRole().name(),
+               users.getAddress(),
+               users.getDob(),
+               token
+               );
     }
 
     @Override
@@ -153,9 +190,6 @@ public class AuthServiceImpl implements AuthService{
         return dto;
     }
 
-    private String generateOtp(){
-        return String.valueOf(100000+new Random().nextInt(900000));
-    }
 
     @Override
     public void sendOtpToEmail(String email){
@@ -167,14 +201,6 @@ public class AuthServiceImpl implements AuthService{
 
         sendEmail(email,otp);
 
-    }
-
-    private void sendEmail(String email,String otp){
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject("Mã xác minh OTP:");
-        message.setText("Xin chào,\n\n Mã OTP của bạn là "+otp+"\n Mã này có hiệu lực trong 15 phút");
-        mailSender.send(message);
     }
 
     @Override
@@ -202,12 +228,41 @@ public class AuthServiceImpl implements AuthService{
 
         Users user=optionalUser.get();
         user.setPassword(passwordEncoder.encode(newPassword));
+
+        user.setAccountLocked(false);
+        user.setFailAttempts(0);
+        user.setLockTime(null);
+
         userRepository.save(user);
 
         token.setUsed(true);
         otpTokenRepository.save(token);
+
+        try {
+            emailService.sendEmail(
+                    user.getEmail(),
+                    "Đổi mật khẩu thành công",
+                    "Xin chào " + user.getFullname() + ",\n\nMật khẩu của bạn đã được thay đổi thành công.\nNếu bạn không thực hiện hành động này, vui lòng liên hệ ngay bộ phận hỗ trợ."
+            );
+        } catch (Exception e) {
+            System.err.println("Không thể gửi email xác nhận: " + e.getMessage());
+        }
+
         return true;
     }
 
+
+
+    private String generateOtp(){
+        return String.valueOf(100000+new Random().nextInt(900000));
+    }
+
+    private void sendEmail(String email,String otp){
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("Mã xác minh OTP:");
+        message.setText("Xin chào,\n\n Mã OTP của bạn là "+otp+"\n Mã này có hiệu lực trong 15 phút");
+        mailSender.send(message);
+    }
 
 }

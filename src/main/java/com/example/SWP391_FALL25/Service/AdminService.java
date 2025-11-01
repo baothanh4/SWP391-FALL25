@@ -8,6 +8,7 @@ import com.example.SWP391_FALL25.DTO.Auth.PartTypeDTO;
 import com.example.SWP391_FALL25.DTO.Auth.MaintenancePlanDTO;
 import com.example.SWP391_FALL25.Entity.*;
 import com.example.SWP391_FALL25.Enum.PaymentStatus;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.Map;
@@ -15,55 +16,67 @@ import java.util.Optional;
 
 public interface AdminService {
 
-    // User Management
-    List<Users> getAllUsers();
+    // Users
+
+    Page<Users> getAllUsers(int page, int size);
     Users getUserById(Long id);
     Users updateUser(Long id, RegisterRequest request);
     void deleteUser(Long id);
     List<Users> getUsersByRole(String role);
+    void unlockUser(Long id);
 
-    // Service Center Management
+
+
+    // Service Centers
     List<ServiceCenter> getAllServiceCenters();
     ServiceCenter getServiceCenterById(Long id);
     ServiceCenter createServiceCenter(ServiceCenterDTO dto);
     ServiceCenter updateServiceCenter(Long id, ServiceCenterDTO dto);
     void deleteServiceCenter(Long id);
 
-    // Parts Management
-    List<Part> getAllParts();
+    // Parts
+    Page<Part> getAllParts(int page, int size);
     Part getPartById(Long id);
     Part createPart(PartDTO dto, Long partTypeId);
     Part updatePartAdmin(Long id, PartDTO dto);
     void deletePart(Long id);
     List<Part> getLowStockParts(int threshold);
 
-    // Part Type Management
+
+
+    // Part Types
     List<PartType> getAllPartTypes();
     PartType createPartType(PartTypeDTO dto);
     PartType updatePartType(Long id, PartTypeDTO dto);
     void deletePartType(Long id);
 
+    // Logs
     List<SystemLog> getAllSystemLog();
-
     Optional<SystemLog> getSystemLogById(Long id);
 
-    // Maintenance Plan Management
+    // Maintenance
     List<MaintenancePlan> getAllMaintenancePlans();
     MaintenancePlan getMaintenancePlanById(Long id);
     MaintenancePlan createMaintenancePlan(MaintenancePlanDTO dto);
     MaintenancePlan updateMaintenancePlan(Long id, MaintenancePlanDTO dto);
     void deleteMaintenancePlan(Long id);
 
-    // Appointments Management
-    List<ServiceAppointment> getAllAppointments();
+    // Appointments
+    // ✅ Pagination for Appointments
+    Page<ServiceAppointment> getAllAppointments(int page, int size);
     List<ServiceAppointment> getAppointmentsByStatus(String status);
     void deleteAppointment(Long id);
 
-    // Payments Management
-    List<Payment> getAllPayments();
+
+
+    // Payments
+    // ✅ Pagination for Payments
+    Page<Payment> getAllPayments(int page, int size);
     List<Payment> getPaymentsByStatus(PaymentStatus status);
 
-    // Statistics & Reports
+
+
+    // Dashboard
     DashboardStatsDTO getDashboardStats();
     Double getTotalRevenue(String startDate, String endDate);
     Map<Integer, Long> getAppointmentsByMonth(int year);

@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -31,6 +32,10 @@ public class Users {
     private Role role;
     private String address;
     private LocalDate dob;
+    private boolean accountLocked=false;
+    private int failAttempts=0;
+    private LocalDateTime lockTime;
+
 
     @OneToMany(mappedBy = "customer",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JsonManagedReference
