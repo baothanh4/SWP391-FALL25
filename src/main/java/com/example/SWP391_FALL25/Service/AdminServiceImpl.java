@@ -12,9 +12,14 @@ import com.example.SWP391_FALL25.Enum.PaymentStatus;
 import com.example.SWP391_FALL25.Enum.Role;
 import com.example.SWP391_FALL25.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.time.LocalDate;
 import java.util.*;
@@ -54,8 +59,9 @@ public class AdminServiceImpl implements AdminService {
     private SystemLogRepository systemLogRepository;
 
     @Override
-    public List<Users> getAllUsers() {
-        return userRepository.findAll();
+    public Page<Users> getAllUsers(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return userRepository.findAll(pageable);
     }
 
     @Override
@@ -157,8 +163,9 @@ public class AdminServiceImpl implements AdminService {
 
 
     @Override
-    public List<Part> getAllParts() {
-        return partRepository.findAll();
+    public Page<Part> getAllParts(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return partRepository.findAll(pageable);
     }
 
     @Override
@@ -323,11 +330,10 @@ public class AdminServiceImpl implements AdminService {
         maintenancePlanRepository.delete(plan);
     }
 
-
-
     @Override
-    public List<ServiceAppointment> getAllAppointments() {
-        return serviceAppointmentRepository.findAll();
+    public Page<ServiceAppointment> getAllAppointments(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return serviceAppointmentRepository.findAll(pageable);
     }
 
     @Override
@@ -346,19 +352,17 @@ public class AdminServiceImpl implements AdminService {
         serviceAppointmentRepository.delete(appointment);
     }
 
-
-
     @Override
-    public List<Payment> getAllPayments() {
-        return paymentRepository.findAll();
+    public Page<Payment> getAllPayments(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return paymentRepository.findAll(pageable);
     }
 
     @Override
     public List<Payment> getPaymentsByStatus(PaymentStatus status) {
-        return paymentRepository.findAll().stream()
-                .filter(payment -> payment.getStatus() == status)
-                .collect(Collectors.toList());
+        return paymentRepository.findByStatus(status);
     }
+
 
 
 
@@ -390,6 +394,7 @@ public class AdminServiceImpl implements AdminService {
         return stats;
     }
 
+
     @Override
     public Double getTotalRevenue(String startDate, String endDate) {
         List<Payment> payments = getPaymentsByStatus(PaymentStatus.COMPLETED);
@@ -415,6 +420,7 @@ public class AdminServiceImpl implements AdminService {
                 .sum();
     }
 
+
     @Override
     public Map<Integer, Long> getAppointmentsByMonth(int year) {
         Map<Integer, Long> monthlyStats = new HashMap<>();
@@ -434,5 +440,15 @@ public class AdminServiceImpl implements AdminService {
                 });
 
         return monthlyStats;
+    }
+
+    @Override
+    public void unlockUser(Long id){
+        Users user=userRepository.findById(id).orElseThrow(() -> new RuntimeException("User id not found"));
+
+        user.setAccountLocked(false);
+        user.setFailAttempts(0);
+        user.setLockTime(null);
+        userRepository.save(user);
     }
 }

@@ -11,6 +11,7 @@ import com.example.SWP391_FALL25.Enum.PaymentStatus;
 import com.example.SWP391_FALL25.Repository.MaintenancePlanItemRepository;
 import com.example.SWP391_FALL25.Service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,8 +29,10 @@ public class AdminController {
     private MaintenancePlanItemRepository maintenancePlanItemRepository;
 
     @GetMapping("/users")
-    public ResponseEntity<List<Users>> getAllUsers() {
-        return ResponseEntity.ok(adminService.getAllUsers());
+    public Page<Users> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return adminService.getAllUsers(page, size);
     }
 
     @GetMapping("/users/{id}")
@@ -84,8 +87,10 @@ public class AdminController {
 
 
     @GetMapping("/parts")
-    public ResponseEntity<List<Part>> getAllParts() {
-        return ResponseEntity.ok(adminService.getAllParts());
+    public Page<Part> getAllParts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return adminService.getAllParts(page, size);
     }
 
     @GetMapping("/parts/{id}")
@@ -168,8 +173,10 @@ public class AdminController {
 
 
     @GetMapping("/appointments")
-    public ResponseEntity<List<ServiceAppointment>> getAllAppointments() {
-        return ResponseEntity.ok(adminService.getAllAppointments());
+    public Page<ServiceAppointment> getAllAppointments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return adminService.getAllAppointments(page, size);
     }
 
     @GetMapping("/appointments/status/{status}")
@@ -186,8 +193,10 @@ public class AdminController {
 
 
     @GetMapping("/payments")
-    public ResponseEntity<List<Payment>> getAllPayments() {
-        return ResponseEntity.ok(adminService.getAllPayments());
+    public ResponseEntity<Page<Payment>> getAllPayments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(adminService.getAllPayments(page, size));
     }
 
     @GetMapping("/payments/status/{status}")
@@ -227,5 +236,11 @@ public class AdminController {
     @GetMapping("/system-log/{id}")
     public ResponseEntity<Optional<SystemLog>> getSystemLogById(@PathVariable(name = "id") Long id) {
         return ResponseEntity.ok(adminService.getSystemLogById(id));
+    }
+
+    @PostMapping("/accounts/{id}/unlock-account")
+    public ResponseEntity<?> unlockAccount(@PathVariable(name = "id")Long id){
+        adminService.unlockUser(id);
+        return ResponseEntity.ok("Account unlocked successfully");
     }
 }
