@@ -1,19 +1,27 @@
 package com.example.SWP391_FALL25.Controller;
 
+import com.example.SWP391_FALL25.Config.JwtTokenProvider;
 import com.example.SWP391_FALL25.DTO.Auth.*;
 import com.example.SWP391_FALL25.Entity.Users;
+import com.example.SWP391_FALL25.Repository.UserRepository;
 import com.example.SWP391_FALL25.Service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
     @Autowired
     private AuthService authService;
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    private UserRepository userRepository;
 
     @PostMapping("/login")
     public LoginResponse login(@RequestBody LoginRequest request){
@@ -48,5 +56,21 @@ public class AuthController {
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request){
         boolean success=authService.resetPassword(request.getEmail(), request.getOtp(), request.getNewPassword());
         return success?ResponseEntity.ok("Doi mat khau thanh cong"):ResponseEntity.badRequest().build();
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(@RequestBody Map<String,String> body){
+        String refreshToken = body.get("refreshToken");
+
+        if(jwtTokenProvider.validateToken(refreshToken,"refresh")){
+            String phone= jwtTokenProvider.getPhoneFromToken(refreshToken);
+            Users user=userRepository.findByPhone(phone).orElseThrow(()->new RuntimeException("User not found"));
+
+            String newAccessToken= jwtTokenProvider.generateAccessToken(phone,user.getRole().name());
+            return ResponseEntity.ok(Map.of("accessToken",newAccessToken));
+
+        }else{
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("Error","Invalid or expired token"));
+        }
     }
 }

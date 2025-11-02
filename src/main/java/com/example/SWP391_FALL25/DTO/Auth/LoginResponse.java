@@ -15,5 +15,6 @@ public class LoginResponse {
     private String role;
     private String address;
     private LocalDate dob;
-    private String token;
+    private String accessToken;
+    private String refreshToken;
 }

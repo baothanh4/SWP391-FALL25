@@ -92,7 +92,8 @@ public class AuthServiceImpl implements AuthService{
        users.setLockTime(null);
        userRepository.save(users);
 
-       String token=jwtTokenProvider.generateToken(users.getPhone(), String.valueOf(users.getRole().name()));
+       String accessToken=jwtTokenProvider.generateAccessToken(users.getPhone(), String.valueOf(users.getRole().name()));
+       String refreshToken=jwtTokenProvider.generateRefreshToken(users.getPhone());
        systemLogService.log(users.getId(), "LOGIN");
 
        return new LoginResponse(
@@ -103,7 +104,8 @@ public class AuthServiceImpl implements AuthService{
                users.getRole().name(),
                users.getAddress(),
                users.getDob(),
-               token
+               accessToken,
+               refreshToken
                );
     }
 
@@ -150,7 +152,8 @@ public class AuthServiceImpl implements AuthService{
         }
 
 
-        String token = jwtTokenProvider.generateToken(users.getPhone(), users.getRole().name());
+        String accessToken = jwtTokenProvider.generateAccessToken(users.getPhone(), users.getRole().name());
+        String refreshToken=jwtTokenProvider.generateRefreshToken(users.getPhone());
         systemLogService.log(users.getId(), "REGISTER");
 
         return new LoginResponse(
@@ -161,7 +164,8 @@ public class AuthServiceImpl implements AuthService{
                 users.getRole().name(),
                 users.getAddress(),
                 users.getDob(),
-                token
+                accessToken,
+                refreshToken
         );
     }
 
