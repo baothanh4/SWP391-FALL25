@@ -140,15 +140,15 @@ public class AuthServiceImpl implements AuthService{
         String body = "Xin chào " + users.getFullname() + ",\n\n"
                 + "Chúc mừng bạn đã đăng ký tài khoản thành công trên hệ thống của chúng tôi!\n"
                 + "Thông tin tài khoản:\n"
-                + "📱 Số điện thoại: " + users.getPhone() + "\n"
-                + "📧 Email: " + users.getEmail() + "\n\n"
+                + " Số điện thoại: " + users.getPhone() + "\n"
+                + " Email: " + users.getEmail() + "\n\n"
                 + "Chúc bạn có trải nghiệm tuyệt vời.\n\n"
                 + "Trân trọng,\nĐội ngũ hỗ trợ khách hàng.";
 
         try {
             emailService.sendEmail(users.getEmail(), subject, body);
         } catch (Exception e) {
-            System.err.println("❌ Gửi email thất bại: " + e.getMessage());
+            System.err.println(" Gửi email thất bại: " + e.getMessage());
         }
 
 

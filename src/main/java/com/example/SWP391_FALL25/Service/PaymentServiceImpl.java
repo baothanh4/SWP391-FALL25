@@ -32,6 +32,9 @@ public class PaymentServiceImpl implements PaymentService{
     @Autowired
     private ServiceAppointmentRepository serviceAppointmentRepository;
 
+    @Autowired
+    private EmailService emailService;
+
     private static final String VNP_HASH_SECRET="GNPMXK160WDIPNTPV5D5AZ29BLXTHDP7";
 
     @Transactional
@@ -40,25 +43,24 @@ public class PaymentServiceImpl implements PaymentService{
         Map<String, String> vnpParams = VNPayUtils.getVNPayResponseParams(request);
         String vnpSecureHash = vnpParams.get("vnp_SecureHash");
 
-
         boolean isValid = VNPayUtils.verifySignature(vnpParams, vnpSecureHash, VNP_HASH_SECRET);
         if (!isValid) {
             throw new RuntimeException("Invalid signature");
         }
-
 
         String responseCode = vnpParams.get("vnp_ResponseCode");
         if (!"00".equals(responseCode)) {
             throw new RuntimeException("Payment failed with code: " + responseCode);
         }
 
-
+        // ✅ Lấy paymentId từ thông tin order
         String orderInfo = vnpParams.get("vnp_OrderInfo").replace("Thanh toan cho ma GD: ", "").trim();
         Long paymentId = Long.parseLong(orderInfo);
 
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
 
+        // ✅ Cập nhật trạng thái thanh toán
         payment.setStatus(PaymentStatus.COMPLETED);
         paymentRepository.save(payment);
 
@@ -70,8 +72,37 @@ public class PaymentServiceImpl implements PaymentService{
         }
 
 
+        try {
+            System.out.println("📧 appointment: " + payment.getAppointment());
+            System.out.println("📧 vehicle: " + (payment.getAppointment() != null ? payment.getAppointment().getVehicle() : null));
+            System.out.println("📧 customer: " +
+                    (payment.getAppointment() != null && payment.getAppointment().getVehicle() != null
+                            ? payment.getAppointment().getVehicle().getCustomer()
+                            : null));
+            System.out.println("📧 email: " +
+                    (payment.getAppointment() != null && payment.getAppointment().getVehicle() != null
+                            ? payment.getAppointment().getVehicle().getCustomer().getEmail()
+                            : null));
+            String to = payment.getAppointment().getVehicle().getCustomer().getEmail();
+            String subject = "Xác nhận thanh toán thành công - Genetix";
+            String body = String.format(
+                    "Xin chào %s,\n\nThanh toán của bạn đã được thực hiện thành công!\n\n" +
+                            "Mã giao dịch: %s\nSố tiền: %s VND\nThời gian: %s\n\n" +
+                            "Cảm ơn bạn đã sử dụng dịch vụ của Genetix.\n\nTrân trọng,\nĐội ngũ Genetix",
+                    payment.getAppointment().getVehicle().getCustomer().getFullname(),
+                    paymentId,
+                    vnpParams.get("vnp_Amount"),
+                    vnpParams.get("vnp_PayDate")
+            );
+            emailService.sendEmail(to, subject, body);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // ✅ Trả về URL redirect về frontend
         return "http://localhost:5173/payment?paymentId=" + paymentId + "&status=success";
     }
+
 
 
     @Transactional
