@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 @Service
+
 public class TechnicianServiceImpl implements TechnicianService{
 
     @Autowired
@@ -39,6 +40,7 @@ public class TechnicianServiceImpl implements TechnicianService{
 
 
     @Override
+
     public Part updatePart(Long partId, PartDTO dto){
         Part part=partRepository.findById(partId).orElseThrow(()->new IllegalArgumentException("Part not found"));
 

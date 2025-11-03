@@ -56,41 +56,38 @@ public class CustomerServiceImpl implements CustomerService{
             throw new RuntimeException("VIN must not be empty.");
         }
 
-
         vin = vin.trim().toUpperCase();
-
 
         if (!vin.matches("^[A-HJ-NPR-Z0-9]{17}$")) {
             throw new RuntimeException("Invalid VIN format. VIN must have 17 characters (letters and numbers).");
         }
 
-
         Optional<Vehicle> optionalVehicle = vehicleRepository.findByVin(vin);
 
-
-        Users customer = userRepository.findById(customerId)
-                .orElseThrow(() -> new RuntimeException("Customer not found."));
+        Users customer = null;
+        if (customerId != null) {
+            customer = userRepository.findById(customerId)
+                    .orElseThrow(() -> new RuntimeException("Customer not found."));
+        }
 
         if (optionalVehicle.isPresent()) {
             Vehicle existingVehicle = optionalVehicle.get();
 
-            // Nếu xe đã có chủ khác
             if (existingVehicle.getCustomer() != null &&
+                    customer != null &&
                     !existingVehicle.getCustomer().getId().equals(customerId)) {
                 throw new RuntimeException("This vehicle (VIN) already belongs to another customer.");
             }
 
-            // Nếu xe chưa có chủ thì gán chủ
-            if (existingVehicle.getCustomer() == null) {
+            if (existingVehicle.getCustomer() == null && customer != null) {
                 existingVehicle.setCustomer(customer);
-                return vehicleRepository.save(existingVehicle);
+                systemLogService.log(customerId, "ASSIGN VEHICLE TO CUSTOMER");
             }
 
-            // Nếu xe đã thuộc customer này rồi
-            return existingVehicle;
+            return vehicleRepository.save(existingVehicle);
         }
 
-        // Nếu VIN chưa tồn tại trong hệ thống → tạo xe mới
+        // Nếu VIN chưa tồn tại
         Vehicle newVehicle = new Vehicle();
         newVehicle.setVin(vin);
         newVehicle.setLicensePlate(vehicleDTO.getLicensePlate());
@@ -98,11 +95,15 @@ public class CustomerServiceImpl implements CustomerService{
         newVehicle.setModel(vehicleDTO.getModel());
         newVehicle.setOdometer(vehicleDTO.getOdometer());
         newVehicle.setYear(vehicleDTO.getYear());
-        newVehicle.setCustomer(customer);
+        newVehicle.setCustomer(customer); // có thể null
 
-        systemLogService.log(customerId,"ADD VEHICLE");
+        if (customerId != null) {
+            systemLogService.log(customerId, "ADD VEHICLE");
+        }
+
         return vehicleRepository.save(newVehicle);
     }
+
 
 
     @Override

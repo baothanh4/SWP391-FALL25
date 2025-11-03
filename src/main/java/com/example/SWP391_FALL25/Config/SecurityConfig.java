@@ -43,7 +43,8 @@ public class SecurityConfig {
                                 ,"/api/admin/**"
                                 ,"/api/staff/**"
                                 ,"/api/technician/**"
-                                ,"/api/customer/**").permitAll()
+                                ,"/api/customer/**")
+                                .permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/staff/**").hasRole("STAFF")
                         .requestMatchers("/api/technician/**").hasRole("TECHNICIAN")

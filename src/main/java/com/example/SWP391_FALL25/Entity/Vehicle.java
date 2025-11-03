@@ -28,7 +28,7 @@ public class Vehicle {
     private Integer odometer;
 
     @ManyToOne
-    @JoinColumn(name = "customer_id")
+    @JoinColumn(name = "customer_id",nullable = true)
     @JsonBackReference
     private Users customer;
 
