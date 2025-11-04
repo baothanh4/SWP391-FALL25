@@ -249,7 +249,7 @@ public class CustomerServiceImpl implements CustomerService{
         // Xóa reminder chưa hoàn thành
         List<Reminder> reminders = reminderRepository.findByVehicle(appointment.getVehicle());
         for (Reminder reminder : reminders) {
-            if (!"COMPLETED".equalsIgnoreCase(reminder.getStatus())) {
+            if (reminder.getStatus() != ReminderStatus.DONE) {
                 reminderRepository.delete(reminder);
             }
         }
@@ -331,7 +331,7 @@ public class CustomerServiceImpl implements CustomerService{
 
         List<Reminder> reminders=reminderRepository.findByVehicle(appointment.getVehicle());
         for(Reminder reminder:reminders){
-            if(!"DONE".equalsIgnoreCase(reminder.getStatus())){
+            if(reminder.getStatus() != ReminderStatus.DONE){
                 reminderRepository.delete(reminder);
             }
         }

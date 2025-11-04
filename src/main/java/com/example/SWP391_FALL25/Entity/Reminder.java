@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Entity;
 
 
+import com.example.SWP391_FALL25.Enum.ReminderStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,7 +21,9 @@ public class Reminder {
     private Long id;
 
     private LocalDate reminderDate;
-    private String status;
+
+    @Enumerated(EnumType.STRING)
+    private ReminderStatus status;
 
     @ManyToOne
     @JoinColumn(name = "vehicle_id")

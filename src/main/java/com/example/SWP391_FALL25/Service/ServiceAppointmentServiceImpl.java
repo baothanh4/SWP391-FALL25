@@ -5,6 +5,7 @@ import com.example.SWP391_FALL25.DTO.Auth.ServiceReportDetailDTO;
 import com.example.SWP391_FALL25.Entity.*;
 import com.example.SWP391_FALL25.Enum.AppointmentStatus;
 import com.example.SWP391_FALL25.Enum.PaymentStatus;
+import com.example.SWP391_FALL25.Enum.ReminderStatus;
 import com.example.SWP391_FALL25.Repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -362,7 +363,7 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
                    Reminder expiredReminder=new Reminder();
                    expiredReminder.setVehicle(vehicle);
                    expiredReminder.setMaintenancePlan(plan);
-                   expiredReminder.setStatus("EXPIRED");
+                   expiredReminder.setStatus(ReminderStatus.MISSED);
                    expiredReminder.setReminderDate(LocalDate.now().minusMonths(plan.getIntervalKm()));
                    reminderRepository.save(expiredReminder);
                }
@@ -371,8 +372,9 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
 
        List<Reminder> reminders=reminderRepository.findByVehicle(vehicle);
        for(Reminder reminder:reminders){
-           if(reminder.getMaintenancePlan().getIntervalKm()<currentPlan.getIntervalKm() && !"COMPLETED".equalsIgnoreCase(reminder.getStatus())){
-               reminder.setStatus("EXPIRED");
+           if (reminder.getMaintenancePlan().getIntervalKm() < currentPlan.getIntervalKm()
+                   && reminder.getStatus() != ReminderStatus.DONE) {
+               reminder.setStatus(ReminderStatus.MISSED);
                reminderRepository.save(reminder);
            }
        }
@@ -415,7 +417,7 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
             reminder.setVehicle(vehicle);
             reminder.setMaintenancePlan(nextPlan);
             reminder.setReminderDate(LocalDate.now().plusMonths(nextPlan.getIntervalMonths()));
-            reminder.setStatus("PENDING");
+            reminder.setStatus(ReminderStatus.PENDING);
             reminderRepository.save(reminder);
         }
     }
@@ -425,7 +427,7 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
         Reminder reminder=new Reminder();
         reminder.setVehicle(vehicle);
         reminder.setMaintenancePlan(plan);
-        reminder.setStatus("Pending");
+        reminder.setStatus(ReminderStatus.PENDING);
         reminder.setReminderDate(appointmentDate.plusMonths(plan.getIntervalMonths()));
 
         reminderRepository.save(reminder);
@@ -441,11 +443,11 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
             }
 
             if(plan.getIntervalKm()<currentPlan.getIntervalKm()){
-                reminder.setStatus("EXPIRED");
+                reminder.setStatus(ReminderStatus.MISSED);
             }else if(plan.getIntervalKm().equals(currentPlan.getIntervalKm())){
-                reminder.setStatus("ACTIVE");
+                reminder.setStatus(ReminderStatus.DONE);
             }else{
-                reminder.setStatus("PENDING");
+                reminder.setStatus(ReminderStatus.PENDING);
             }
             reminderRepository.save(reminder);
         }
@@ -456,7 +458,7 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
             Reminder nextReminder=new Reminder();
             nextReminder.setVehicle(vehicle);
             nextReminder.setMaintenancePlan(nextPlan);
-            nextReminder.setStatus("PENDING");
+            nextReminder.setStatus(ReminderStatus.PENDING);
             nextReminder.setReminderDate(LocalDate.now().plusMonths(nextPlan.getIntervalMonths()));
             reminderRepository.save(nextReminder);
         }
