@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Entity
@@ -24,7 +25,11 @@ public class Vehicle {
     private String licensePlate;
     private String brand;
     private String model;
-    private Integer year;
+
+
+    @Column(name = "purchaseDate")
+    private LocalDate purchaseDate;
+
     private Integer odometer;
 
     @ManyToOne

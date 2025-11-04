@@ -94,7 +94,7 @@ public class CustomerServiceImpl implements CustomerService{
         newVehicle.setBrand(vehicleDTO.getBrand());
         newVehicle.setModel(vehicleDTO.getModel());
         newVehicle.setOdometer(vehicleDTO.getOdometer());
-        newVehicle.setYear(vehicleDTO.getYear());
+        newVehicle.setPurchaseDate(vehicleDTO.getPurchaseDate());
         newVehicle.setCustomer(customer); // có thể null
 
         if (customerId != null) {
@@ -148,7 +148,7 @@ public class CustomerServiceImpl implements CustomerService{
         vehicleDTO.setBrand(vehicle.getBrand());
         vehicleDTO.setModel(vehicle.getModel());
         vehicleDTO.setOdometer(vehicle.getOdometer());
-        vehicleDTO.setYear(vehicle.getYear());
+        vehicleDTO.setPurchaseDate(vehicle.getPurchaseDate());
 
         return vehicleDTO;
     }

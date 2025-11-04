@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,7 +16,7 @@ public class VehicleDTO {
     private String licensePlate;
     private String brand;
     private String model;
-    private Integer year;
+    private LocalDate purchaseDate;
     private Integer odometer;
 
 }

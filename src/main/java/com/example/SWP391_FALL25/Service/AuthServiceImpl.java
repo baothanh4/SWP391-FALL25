@@ -187,7 +187,7 @@ public class AuthServiceImpl implements AuthService{
                         v.getLicensePlate(),
                         v.getBrand(),
                         v.getModel(),
-                        v.getYear(),
+                        v.getPurchaseDate(),
                         v.getOdometer()
                 ))
                 .collect(Collectors.toSet());

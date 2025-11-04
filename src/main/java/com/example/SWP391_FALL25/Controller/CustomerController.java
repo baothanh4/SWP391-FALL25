@@ -1,13 +1,11 @@
 package com.example.SWP391_FALL25.Controller;
 
 
-import com.example.SWP391_FALL25.DTO.Auth.DetailTotalCostResponseDTO;
-import com.example.SWP391_FALL25.DTO.Auth.RegisterRequest;
-import com.example.SWP391_FALL25.DTO.Auth.ServiceAppointmentDTO;
-import com.example.SWP391_FALL25.DTO.Auth.VehicleDTO;
+import com.example.SWP391_FALL25.DTO.Auth.*;
 import com.example.SWP391_FALL25.Entity.ServiceAppointment;
 import com.example.SWP391_FALL25.Entity.Vehicle;
 import com.example.SWP391_FALL25.Service.CustomerService;
+import com.example.SWP391_FALL25.Service.ReminderService;
 import com.example.SWP391_FALL25.Service.ServiceAppointmentService;
 import com.example.SWP391_FALL25.Service.ServiceCenterService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +28,13 @@ public class CustomerController {
 
     @Autowired
     private ServiceCenterService serviceCenterService;
+
+    @Autowired
+    private final ReminderService reminderService;
+
+    public CustomerController(ReminderService reminderService) {
+        this.reminderService = reminderService;
+    }
 
     @PostMapping("/{id}/add-car")
     public Vehicle allCar(@PathVariable(name = "id") Long id,@RequestBody VehicleDTO vehicleDTO){
@@ -110,4 +115,8 @@ public class CustomerController {
         }
     }
 
+    @GetMapping("/vehicle/{vehicleId}/maintenance")
+    public VehicleMaintenanceResponseDTO getVehicleMaintenance(@PathVariable Long vehicleId) {
+        return reminderService.getVehicleMaintenance(vehicleId);
+    }
 }
