@@ -119,4 +119,10 @@ public class CustomerController {
     public VehicleMaintenanceResponseDTO getVehicleMaintenance(@PathVariable Long vehicleId) {
         return reminderService.getVehicleMaintenance(vehicleId);
     }
+
+    @PostMapping("/generate/{vehicleId}")
+    public String generateReminders(@PathVariable Long vehicleId) {
+        reminderService.generateInitialReminders(vehicleId);
+        return "Reminders generated successfully!";
+    }
 }

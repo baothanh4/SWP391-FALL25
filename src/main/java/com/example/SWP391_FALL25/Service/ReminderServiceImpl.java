@@ -35,30 +35,50 @@ public class ReminderServiceImpl implements ReminderService {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new RuntimeException("Vehicle not found"));
 
-        generateRemindersIfNeeded(vehicle);
-
         List<Reminder> reminders = reminderRepository.findByVehicle(vehicle);
+
+        // Cập nhật status nếu cần
+        for (Reminder r : reminders) {
+            updateReminderStatus(r);
+        }
+
+        reminderRepository.saveAll(reminders);
 
         VehicleMaintenanceResponseDTO response = new VehicleMaintenanceResponseDTO();
         response.setId(vehicle.getId());
         response.setVin(vehicle.getVin());
         response.setPurchaseDate(vehicle.getPurchaseDate());
 
-        List<MaintenanceReminderResponseDTO> reminderDTOs = new ArrayList<>();
+        List<MaintenanceReminderResponseDTO> reminderDTOs = reminders.stream()
+                .map(r -> new MaintenanceReminderResponseDTO(
+                        r.getMaintenancePlan().getId().intValue(),
+                        r.getReminderDate(),
+                        r.getStatus().name()))
+                .toList();
 
-        for (Reminder r : reminders) {
-            MaintenanceReminderResponseDTO dto = new MaintenanceReminderResponseDTO();
-            dto.setMaintenanceNumber(r.getMaintenancePlan().getId().intValue());
-            dto.setScheduledDate(r.getReminderDate());
-            dto.setStatus(r.getStatus().name());
-            reminderDTOs.add(dto);
-        }
 
         response.setMaintenanceReminders(reminderDTOs);
         return response;
     }
 
-    private void generateRemindersIfNeeded(Vehicle vehicle) {
+    private void updateReminderStatus(Reminder reminder) {
+        LocalDate today = LocalDate.now();
+        LocalDate scheduled = reminder.getReminderDate();
+
+        if (reminder.getStatus() == ReminderStatus.DONE) return;
+
+        if (today.isAfter(scheduled)) {
+            reminder.setStatus(ReminderStatus.MISSED);
+        } else {
+            reminder.setStatus(ReminderStatus.PENDING);
+        }
+    }
+
+    @Override
+    public void generateInitialReminders(Long vehicleId) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new RuntimeException("Vehicle not found"));
+
         List<MaintenancePlan> plans = maintenancePlanRepository.findAll();
         LocalDate purchaseDate = vehicle.getPurchaseDate();
 
@@ -77,4 +97,5 @@ public class ReminderServiceImpl implements ReminderService {
             }
         }
     }
+
 }
