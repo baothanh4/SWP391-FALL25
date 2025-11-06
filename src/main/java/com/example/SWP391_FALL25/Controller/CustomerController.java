@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Controller;
 
 
+import com.example.SWP391_FALL25.DTO.Auth.AppointmentDTO;
 import com.example.SWP391_FALL25.DTO.Auth.DetailTotalCostResponseDTO;
 import com.example.SWP391_FALL25.DTO.Auth.RegisterRequest;
 import com.example.SWP391_FALL25.DTO.Auth.ServiceAppointmentDTO;
@@ -63,8 +64,8 @@ public class CustomerController {
     }
 
     @GetMapping("/{userId}/appointments")
-    public ResponseEntity<List<ServiceAppointment>> getUserAppointments(@PathVariable Long userId) {
-        List<ServiceAppointment> appointments = customerService.getAppointmentByUser(userId);
+    public ResponseEntity<List<AppointmentDTO>> getUserAppointments(@PathVariable Long userId) {
+        List<AppointmentDTO> appointments = customerService.getAppointmentByUser(userId);
         return ResponseEntity.ok(appointments);
     }
 

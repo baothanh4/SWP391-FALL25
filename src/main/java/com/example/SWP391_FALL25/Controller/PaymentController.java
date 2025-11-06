@@ -35,4 +35,16 @@ public class PaymentController {
         Map<String, Object> response = paymentService.createVNPayPayment(paymentId, paymentMethod);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/appointment/{appointmentId}/details")
+    public ResponseEntity<Map<String, Object>> getPaymentDetailsByAppointment(@PathVariable Long appointmentId) {
+        Map<String, Object> details = paymentService.getPaymentDetailsByAppointment(appointmentId);
+        return ResponseEntity.ok(details);
+    }
+
+    @PostMapping("/cash/{paymentId}")
+    public ResponseEntity<String> confirmCashPayment(@PathVariable Long paymentId) {
+        paymentService.confirmCashPayment(paymentId);
+        return ResponseEntity.ok("Cash payment confirmed successfully");
+    }
 }

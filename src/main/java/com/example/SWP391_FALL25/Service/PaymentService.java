@@ -12,6 +12,9 @@ public interface PaymentService {
     @Transactional
     void confirmPayment(Long paymentId);
 
-
     Map<String, Object> createVNPayPayment(Long paymentId, String paymentMethod);
+    
+    Map<String, Object> getPaymentDetailsByAppointment(Long appointmentId);
+    
+    void confirmCashPayment(Long paymentId);
 }

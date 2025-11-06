@@ -23,6 +23,8 @@ public class ServiceReport {
     private Long id;
 
     private LocalDate reportDate;
+    
+    private Integer currentKm;
 
     @OneToOne
     @JoinColumn(name = "appointment_id")

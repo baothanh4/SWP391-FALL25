@@ -2,10 +2,13 @@ package com.example.SWP391_FALL25.Service;
 
 import com.example.SWP391_FALL25.Entity.Payment;
 import com.example.SWP391_FALL25.Entity.ServiceAppointment;
+import com.example.SWP391_FALL25.Entity.ServiceReport;
+import com.example.SWP391_FALL25.Entity.ServiceReportDetails;
 import com.example.SWP391_FALL25.Enum.AppointmentStatus;
 import com.example.SWP391_FALL25.Enum.PaymentStatus;
 import com.example.SWP391_FALL25.Repository.PaymentRepository;
 import com.example.SWP391_FALL25.Repository.ServiceAppointmentRepository;
+import com.example.SWP391_FALL25.Repository.ServiceReportDetailsRepository;
 import com.example.SWP391_FALL25.Utility.VNPayUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -13,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -31,6 +35,9 @@ public class PaymentServiceImpl implements PaymentService{
 
     @Autowired
     private ServiceAppointmentRepository serviceAppointmentRepository;
+
+    @Autowired
+    private ServiceReportDetailsRepository serviceReportDetailsRepository;
 
     private static final String VNP_HASH_SECRET="GNPMXK160WDIPNTPV5D5AZ29BLXTHDP7";
 
@@ -128,5 +135,56 @@ public class PaymentServiceImpl implements PaymentService{
             throw new IllegalArgumentException("Invalid order info format");
         }
         return Long.parseLong(orderInfo.split(":")[1].trim());
+    }
+
+    @Override
+    public Map<String, Object> getPaymentDetailsByAppointment(Long appointmentId) {
+        ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        Payment payment = paymentRepository.findByAppointmentId(appointmentId);
+        if (payment == null) {
+            throw new RuntimeException("Payment not found for this appointment");
+        }
+
+        ServiceReport report = appointment.getReport();
+        double totalLaborCost = 0.0;
+        double totalPartCost = 0.0;
+
+        if (report != null) {
+            List<ServiceReportDetails> details = serviceReportDetailsRepository.findByReport(report);
+            for (ServiceReportDetails detail : details) {
+                totalLaborCost += detail.getLaborCost() != null ? detail.getLaborCost() : 0.0;
+                totalPartCost += detail.getPartCost() != null ? detail.getPartCost() : 0.0;
+            }
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("paymentId", payment.getId());
+        result.put("appointmentId", appointmentId);
+        result.put("totalAmount", payment.getAmount());
+        result.put("totalLaborCost", totalLaborCost);
+        result.put("totalPartCost", totalPartCost);
+        result.put("status", payment.getStatus().name());
+        result.put("paymentMethod", payment.getPaymentMethod());
+        
+        return result;
+    }
+
+    @Transactional
+    @Override
+    public void confirmCashPayment(Long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+
+        payment.setPaymentMethod("CASH");
+        payment.setStatus(PaymentStatus.PENDING);
+        paymentRepository.save(payment);
+
+        ServiceAppointment appointment = payment.getAppointment();
+        if (appointment != null) {
+            appointment.setStatus(AppointmentStatus.IN_PROGRESS);
+            serviceAppointmentRepository.save(appointment);
+        }
     }
 }

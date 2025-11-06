@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
@@ -249,6 +250,10 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
     public List<ServiceReportDetails> regenerateDetailsByKm(Long reportId, Integer currentKm){
        ServiceReport report=reportRepository.findById(reportId).orElseThrow(()->new RuntimeException("Report not found"));
 
+       // Save the current kilometer to the report
+       report.setCurrentKm(currentKm);
+       reportRepository.save(report);
+
        ServiceAppointment appointment=report.getAppointment();
        Vehicle vehicle=appointment.getVehicle();
 
@@ -262,48 +267,119 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
            serviceReportDetailsRepository.delete(d);
        }
 
-       MaintenancePlan currentPlan=maintenancePlanRepository.findTopByIntervalKmLessThanEqualOrderByIntervalKmDesc(currentKm).orElseThrow(()->new RuntimeException("No matching maintenance plan not found"));
+       Optional<MaintenancePlan> currentPlanOpt = maintenancePlanRepository.findTopByIntervalKmLessThanEqualOrderByIntervalKmDesc(currentKm);
+       
+       // If no maintenance plan found, return empty list (technician can add services manually)
+       if (!currentPlanOpt.isPresent()) {
+           System.out.println("⚠️ No maintenance plan found for kilometer: " + currentKm);
+           List<MaintenancePlan> allPlans = maintenancePlanRepository.findAll();
+           System.out.println("📊 Total maintenance plans in database: " + allPlans.size());
+           if (!allPlans.isEmpty()) {
+               System.out.println("Available plans:");
+               allPlans.forEach(p -> System.out.println("  - " + p.getIntervalKm() + " km"));
+           }
+           return new ArrayList<>();
+       }
+       
+       MaintenancePlan currentPlan = currentPlanOpt.get();
+       System.out.println("✅ Found maintenance plan: " + currentPlan.getIntervalKm() + " km for input: " + currentKm + " km");
+       
        List<MaintenancePlanItem> items=maintenancePlanItemRepository.findByMaintenancePlan(currentPlan);
+       System.out.println("📋 Found " + items.size() + " maintenance items for this plan");
 
-       List<ServiceReportDetails> savedDetails=new ArrayList<>();
-       for(MaintenancePlanItem item:items){
-           ServiceReportDetails details=new ServiceReportDetails();
-           details.setReport(report);
-           details.setMaintenancePlanItem(item);
-           details.setService(item.getTaskName());
-           details.setActionType(null);
-           details.setConditionStatus(null);
-           details.setLaborCost(0.0);
-           details.setPartCost(0.0);
-           details.setQuantity(0);
-           details.setPart(null);
-           details.setTotalCost(0.0);
+        List<ServiceReportDetails> savedDetails=new ArrayList<>();
+        for(MaintenancePlanItem item:items){
+            ServiceReportDetails details=new ServiceReportDetails();
+            details.setReport(report);
+            details.setMaintenancePlanItem(item);
+            details.setService(item.getTaskName());
+            details.setActionType(null);
+            details.setConditionStatus(null);
+            
+            // Auto-populate part based on partType
+            Part selectedPart = null;
+            int defaultQuantity = 0;
+            double partCost = 0.0;
+            double laborCost = 0.0;
+            
+            if (item.getPartType() != null && !item.getPartType().trim().isEmpty()) {
+                // Try to find a part matching the partType
+                Optional<Part> partOpt = partRepository.findTopByPartType_Name(item.getPartType().trim());
+                if (partOpt.isPresent()) {
+                    selectedPart = partOpt.get();
+                    
+                    // Set default quantity based on action type inferred from task name
+                    String taskLower = item.getTaskName().toLowerCase();
+                    if (taskLower.contains("replace") || taskLower.contains("change")) {
+                        defaultQuantity = 1;
+                    } else if (taskLower.contains("top up") || taskLower.contains("top-up")) {
+                        defaultQuantity = 1;
+                    } else {
+                        // For inspection/check tasks, no part needed initially
+                        defaultQuantity = 0;
+                    }
+                    
+                    // Calculate part cost
+                    if (defaultQuantity > 0 && selectedPart.getPrice() != null) {
+                        partCost = selectedPart.getPrice() * defaultQuantity;
+                    }
+                    
+                    System.out.println("✅ Auto-matched part: " + selectedPart.getName() + 
+                                     " (Qty: " + defaultQuantity + ", Cost: " + partCost + ")");
+                } else {
+                    System.out.println("⚠️ No part found for partType: " + item.getPartType());
+                }
+            }
+            
+            // Set realistic labor costs based on service type
+            String taskLower = item.getTaskName().toLowerCase();
+            if (taskLower.contains("oil change") || taskLower.contains("engine oil")) {
+                laborCost = 150000.0; // 150k VND for oil change
+            } else if (taskLower.contains("filter") && taskLower.contains("replace")) {
+                laborCost = 100000.0; // 100k VND for filter replacement
+            } else if (taskLower.contains("brake")) {
+                laborCost = 200000.0; // 200k VND for brake work
+            } else if (taskLower.contains("tire")) {
+                laborCost = 80000.0; // 80k VND for tire rotation/check
+            } else if (taskLower.contains("battery")) {
+                laborCost = 120000.0; // 120k VND for battery check/replacement
+            } else if (taskLower.contains("inspect") || taskLower.contains("check")) {
+                laborCost = 50000.0; // 50k VND for inspection
+            } else {
+                laborCost = 100000.0; // Default 100k VND
+            }
+            
+            details.setLaborCost(laborCost);
+            details.setPartCost(partCost);
+            details.setQuantity(defaultQuantity);
+            details.setPart(selectedPart);
+            details.setTotalCost(laborCost + partCost);
 
-           savedDetails.add(serviceReportDetailsRepository.save(details));
-       }
+            savedDetails.add(serviceReportDetailsRepository.save(details));
+        }
 
-       List<MaintenancePlan> allPlans=maintenancePlanRepository.findAll();
-       for(MaintenancePlan plan:allPlans){
-           if(plan.getIntervalKm()<currentPlan.getIntervalKm()){
-               boolean exists=reminderRepository.existsByVehicleAndMaintenancePlan(vehicle,plan);
-               if(!exists){
-                   Reminder expiredReminder=new Reminder();
-                   expiredReminder.setVehicle(vehicle);
-                   expiredReminder.setMaintenancePlan(plan);
-                   expiredReminder.setStatus("EXPIRED");
-                   expiredReminder.setReminderDate(LocalDate.now().minusMonths(plan.getIntervalKm()));
-                   reminderRepository.save(expiredReminder);
-               }
-           }
-       }
+        List<MaintenancePlan> allPlans=maintenancePlanRepository.findAll();
+        for(MaintenancePlan plan:allPlans){
+            if(plan.getIntervalKm()<currentPlan.getIntervalKm()){
+                boolean exists=reminderRepository.existsByVehicleAndMaintenancePlan(vehicle,plan);
+                if(!exists){
+                    Reminder expiredReminder=new Reminder();
+                    expiredReminder.setVehicle(vehicle);
+                    expiredReminder.setMaintenancePlan(plan);
+                    expiredReminder.setStatus("DONE");
+                    expiredReminder.setReminderDate(LocalDate.now().minusMonths(plan.getIntervalKm()));
+                    reminderRepository.save(expiredReminder);
+                }
+            }
+        }
 
-       List<Reminder> reminders=reminderRepository.findByVehicle(vehicle);
-       for(Reminder reminder:reminders){
-           if(reminder.getMaintenancePlan().getIntervalKm()<currentPlan.getIntervalKm() && !"COMPLETED".equalsIgnoreCase(reminder.getStatus())){
-               reminder.setStatus("EXPIRED");
-               reminderRepository.save(reminder);
-           }
-       }
+        List<Reminder> reminders=reminderRepository.findByVehicle(vehicle);
+        for(Reminder reminder:reminders){
+            if(reminder.getMaintenancePlan().getIntervalKm()<currentPlan.getIntervalKm() && !"DONE".equalsIgnoreCase(reminder.getStatus())){
+                reminder.setStatus("DONE");
+                reminderRepository.save(reminder);
+            }
+        }
 
        updateReminderForCurrentKm(vehicle, currentPlan);
 
@@ -353,7 +429,7 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
         Reminder reminder=new Reminder();
         reminder.setVehicle(vehicle);
         reminder.setMaintenancePlan(plan);
-        reminder.setStatus("Pending");
+        reminder.setStatus("PENDING");
         reminder.setReminderDate(appointmentDate.plusMonths(plan.getIntervalMonths()));
 
         reminderRepository.save(reminder);
@@ -369,9 +445,9 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
             }
 
             if(plan.getIntervalKm()<currentPlan.getIntervalKm()){
-                reminder.setStatus("EXPIRED");
+                reminder.setStatus("DONE");
             }else if(plan.getIntervalKm().equals(currentPlan.getIntervalKm())){
-                reminder.setStatus("ACTIVE");
+                reminder.setStatus("PENDING");
             }else{
                 reminder.setStatus("PENDING");
             }

@@ -1,5 +1,6 @@
 package com.example.SWP391_FALL25.Service;
 
+import com.example.SWP391_FALL25.DTO.Auth.AppointmentDTO;
 import com.example.SWP391_FALL25.DTO.Auth.DetailTotalCostResponseDTO;
 import com.example.SWP391_FALL25.DTO.Auth.RegisterRequest;
 import com.example.SWP391_FALL25.DTO.Auth.VehicleDTO;
@@ -20,7 +21,7 @@ public interface CustomerService {
 
     VehicleDTO getVehicleById(Long id);
 
-    List<ServiceAppointment> getAppointmentByUser(Long userId);
+    List<AppointmentDTO> getAppointmentByUser(Long userId);
 
     DetailTotalCostResponseDTO getDetailTotalCostReport(Long appointmentId);
 

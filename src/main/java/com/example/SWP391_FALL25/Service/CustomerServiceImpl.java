@@ -153,8 +153,59 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
-    public List<ServiceAppointment> getAppointmentByUser(Long userId){
-        return serviceAppointmentRepository.findByUserId(userId);
+    public List<AppointmentDTO> getAppointmentByUser(Long userId){
+        List<ServiceAppointment> appointments = serviceAppointmentRepository.findByUserId(userId);
+        List<AppointmentDTO> appointmentDTOs = new ArrayList<>();
+        
+        for (ServiceAppointment appointment : appointments) {
+            AppointmentDTO dto = new AppointmentDTO();
+            dto.setAppointmentId(appointment.getId());
+            dto.setAppointmentDate(appointment.getAppointmentDate());
+            dto.setAppointmentTime(appointment.getAppointmentTime());
+            dto.setStatus(appointment.getStatus() != null ? appointment.getStatus().name() : "PENDING");
+            dto.setTechnicianAssigned(appointment.getTechnicianAssigned());
+            
+            // Vehicle information
+            if (appointment.getVehicle() != null) {
+                Vehicle vehicle = appointment.getVehicle();
+                dto.setVehicleId(vehicle.getId());
+                dto.setVehicleModel(vehicle.getBrand() + " " + vehicle.getModel());
+                dto.setLicensePlate(vehicle.getLicensePlate());
+                dto.setVin(vehicle.getVin());
+                
+                // Customer information
+                if (vehicle.getCustomer() != null) {
+                    dto.setCustomerId(vehicle.getCustomer().getId());
+                    dto.setCustomerName(vehicle.getCustomer().getFullname());
+                    dto.setCustomerPhone(vehicle.getCustomer().getPhone());
+                    dto.setCustomerEmail(vehicle.getCustomer().getEmail());
+                }
+            }
+            
+            // Service Center information
+            if (appointment.getServiceCenter() != null) {
+                dto.setServiceCenterId(appointment.getServiceCenter().getId());
+                dto.setServiceCenterName(appointment.getServiceCenter().getName());
+            }
+            
+            // Payment information
+            Payment payment = paymentRepository.findByAppointmentId(appointment.getId());
+            if (payment != null) {
+                dto.setPaymentAmount(payment.getAmount());
+                dto.setPaymentStatus(payment.getStatus() != null ? payment.getStatus().name() : null);
+                dto.setPaymentMethod(payment.getPaymentMethod());
+            }
+            
+            // Determine if appointment can be cancelled
+            boolean canCancel = appointment.getStatus() != null && 
+                               List.of(AppointmentStatus.PENDING, AppointmentStatus.ASSIGNED)
+                                   .contains(appointment.getStatus());
+            dto.setCanCancel(canCancel);
+            
+            appointmentDTOs.add(dto);
+        }
+        
+        return appointmentDTOs;
     }
 
     @Override
@@ -211,17 +262,13 @@ public class CustomerServiceImpl implements CustomerService{
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
 
-        if ("ASSIGNED".equalsIgnoreCase(appointment.getStatus().name())) {
-            throw new RuntimeException("Cannot cancel an assigned appointment.");
-        }
-
-        // ✅ Chỉ cho phép hủy nếu status là PENDING, CONFIRMED, hoặc SCHEDULED
-        if (!List.of("PENDING", "CONFIRMED", "SCHEDULED").contains(appointment.getStatus().name().toUpperCase())) {
+        // Only allow cancellation for PENDING and ASSIGNED status
+        if (!List.of("PENDING", "ASSIGNED").contains(appointment.getStatus().name().toUpperCase())) {
             throw new RuntimeException("Appointment cannot be canceled in current status: " + appointment.getStatus());
         }
 
-
-        appointment.setStatus(AppointmentStatus.PENDING);
+        // Set status to CANCELLED
+        appointment.setStatus(AppointmentStatus.CANCELLED);
         serviceAppointmentRepository.save(appointment);
 
 
