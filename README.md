@@ -157,8 +157,8 @@ spring.mail.properties.mail.smtp.starttls.enable=true
 # ==============================
 # VNPay CONFIGURATION
 # ==============================
-vnpay.tmncode=9E8978K7
-vnpay.hashSecret=454U264QTTGJE2HTTPFFPAZ1GZE8Z3Y5
+vnpay.tmncode=YourTMNCode
+vnpay.hashSecret=YourHashSecret
 vnpay.payUrl=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
 vnpay.returnUrl=https://your-ngrok-url.ngrok-free.app/api/payment/vnpay-return
 vnpay.ipnUrl=https://your-ngrok-url.ngrok-free.app/api/payment/vnpay-ipn
