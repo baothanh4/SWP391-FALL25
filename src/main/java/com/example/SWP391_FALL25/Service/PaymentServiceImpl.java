@@ -35,6 +35,8 @@ public class PaymentServiceImpl implements PaymentService{
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private QRService qrService;
     private static final String VNP_HASH_SECRET="GNPMXK160WDIPNTPV5D5AZ29BLXTHDP7";
 
     @Transactional
@@ -124,35 +126,63 @@ public class PaymentServiceImpl implements PaymentService{
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
 
-        // Nếu người dùng chọn VNPAY thì cập nhật lại phương thức thanh toán
-        if (paymentMethod != null && !"".equals(paymentMethod)) {
+        // ✅ Cập nhật phương thức thanh toán nếu có chỉ định
+        if (paymentMethod != null && !paymentMethod.isEmpty()) {
             payment.setPaymentMethod(paymentMethod.toUpperCase());
             paymentRepository.save(payment);
         }
 
-        if (!"VNPAY".equalsIgnoreCase(payment.getPaymentMethod())) {
-            throw new RuntimeException("Payment method is not VNPAY");
-        }
+        Map<String, Object> result = new HashMap<>();
 
         try {
-            String vnpUrl = vnPayService.createVNPayUrl(
-                    String.valueOf(payment.getId()),
-                    Math.round(payment.getAmount())
-            );
+            // ✅ Trường hợp 1: Thanh toán bằng VNPay
+            if ("VNPAY".equalsIgnoreCase(payment.getPaymentMethod())) {
+                String vnpUrl = vnPayService.createVNPayUrl(
+                        String.valueOf(payment.getId()),
+                        Math.round(payment.getAmount())
+                );
 
-            payment.setStatus(PaymentStatus.COMPLETED);
-            paymentRepository.save(payment);
+                // Cập nhật trạng thái chờ thanh toán
+                payment.setStatus(PaymentStatus.PENDING);
+                paymentRepository.save(payment);
 
-            Map<String, Object> result = new HashMap<>();
-            result.put("paymentId", payment.getId());
-            result.put("amount", payment.getAmount());
-            result.put("vnpUrl", vnpUrl);
+                result.put("paymentId", payment.getId());
+                result.put("amount", payment.getAmount());
+                result.put("paymentMethod", "VNPAY");
+                result.put("vnpUrl", vnpUrl);
+                result.put("message", "VNPay URL created successfully");
+            }
+
+            // ✅ Trường hợp 2: Thanh toán bằng QR ngân hàng
+            else if ("QR".equalsIgnoreCase(payment.getPaymentMethod())) {
+                // Sinh QR code VietQR
+                String qrUrl = qrService.generateBankQr(
+                        payment.getAmount(),
+                        "Thanh toan dich vu EV #" + payment.getId()
+                );
+
+                payment.setStatus(PaymentStatus.PENDING);
+                paymentRepository.save(payment);
+
+                result.put("paymentId", payment.getId());
+                result.put("amount", payment.getAmount());
+                result.put("paymentMethod", "QR");
+                result.put("qrUrl", qrUrl);
+                result.put("message", "QR payment generated successfully");
+            }
+
+            // ❌ Trường hợp không hợp lệ
+            else {
+                throw new RuntimeException("Unsupported payment method: " + payment.getPaymentMethod());
+            }
+
             return result;
 
         } catch (Exception e) {
-            throw new RuntimeException("Error creating VNPay URL: " + e.getMessage());
+            throw new RuntimeException("Error creating payment: " + e.getMessage());
         }
     }
+
 
     private Long extractPaymentId(String orderInfo) {
         if (orderInfo == null || !orderInfo.contains(":")) {
