@@ -2,7 +2,9 @@ package com.example.SWP391_FALL25.Controller;
 
 
 import com.example.SWP391_FALL25.DTO.Auth.AppointmentDTO;
+import com.example.SWP391_FALL25.DTO.Auth.UpdateUserProfileRequest;
 import com.example.SWP391_FALL25.Entity.ServiceAppointment;
+import com.example.SWP391_FALL25.Entity.Users;
 import com.example.SWP391_FALL25.Service.ServiceAppointmentService;
 import com.example.SWP391_FALL25.Service.StaffService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,16 @@ public class StaffController {
 
     @Autowired
     private StaffService staffService;
+
+    @PutMapping("/update-profile/{staffId}")
+    public ResponseEntity<Users> updateStaffProfile(
+            @PathVariable Long staffId,
+            @RequestBody UpdateUserProfileRequest request) {
+
+        Users updated = staffService.updateStaffProfile(staffId, request);
+        return ResponseEntity.ok(updated);
+    }
+
 
     @PutMapping("/{id}/assign")
     public ResponseEntity<?> assignTechnican(@PathVariable("id") Long appointmentId,@RequestParam Long technicianId){

@@ -1,6 +1,7 @@
     package com.example.SWP391_FALL25.Service;
     
     import com.example.SWP391_FALL25.DTO.Auth.AppointmentDTO;
+    import com.example.SWP391_FALL25.DTO.Auth.UpdateUserProfileRequest;
     import com.example.SWP391_FALL25.Entity.*;
     import java.util.List;
     
@@ -9,4 +10,6 @@
         List<AppointmentDTO> getAllAppointments();
 
         void updateAppointmentStatus(Long appointmentId);
+
+        Users updateStaffProfile(Long staffId, UpdateUserProfileRequest request);
     }

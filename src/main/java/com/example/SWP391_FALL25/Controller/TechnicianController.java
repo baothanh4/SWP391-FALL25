@@ -2,6 +2,7 @@ package com.example.SWP391_FALL25.Controller;
 
 import com.example.SWP391_FALL25.DTO.Auth.PartDTO;
 import com.example.SWP391_FALL25.DTO.Auth.ServiceReportDetailDTO;
+import com.example.SWP391_FALL25.DTO.Auth.UpdateUserProfileRequest;
 import com.example.SWP391_FALL25.Entity.ServiceAppointment;
 import com.example.SWP391_FALL25.Entity.ServiceReportDetails;
 import com.example.SWP391_FALL25.Entity.Users;
@@ -27,6 +28,11 @@ public class TechnicianController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @PatchMapping("/update-profile/{technicianId}")
+    public ResponseEntity<?> updateProfile(@PathVariable Long technicianId, @RequestBody UpdateUserProfileRequest request) {
+        return ResponseEntity.ok(technicianService.updateTechnicianProfile(technicianId, request));
+    }
 
     @GetMapping("/{technicianId}/tasks")
     public List<ServiceAppointment> getAppointments(@PathVariable(name = "technicianId")Long technicianId) {

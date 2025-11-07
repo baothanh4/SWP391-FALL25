@@ -1,11 +1,16 @@
 package com.example.SWP391_FALL25.Service;
 
+import com.example.SWP391_FALL25.DTO.Auth.UpdateUserProfileRequest;
 import com.example.SWP391_FALL25.Entity.ServiceAppointment;
 import com.example.SWP391_FALL25.DTO.Auth.AppointmentDTO;
+import com.example.SWP391_FALL25.Entity.Users;
 import com.example.SWP391_FALL25.Enum.AppointmentStatus;
+import com.example.SWP391_FALL25.Enum.Role;
 import com.example.SWP391_FALL25.Repository.ServiceAppointmentRepository;
+import com.example.SWP391_FALL25.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -16,6 +21,14 @@ public class StaffServiceImpl implements StaffService {
     @Autowired
     private ServiceAppointmentRepository appointmentRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private UserServiceImpl userService;
+
+    @Autowired
+    private SystemLogService systemLogService;
 
     @Override
     public List<AppointmentDTO> getAllAppointments() {
@@ -45,4 +58,21 @@ public class StaffServiceImpl implements StaffService {
         appointment.setStatus(AppointmentStatus.COMPLETED);
         appointmentRepository.save(appointment);
     }
+
+    @Override
+    @Transactional
+    public Users updateStaffProfile(Long staffId, UpdateUserProfileRequest request) {
+        Users staff = userRepository.findById(staffId)
+                .orElseThrow(() -> new RuntimeException("Staff not found"));
+
+        if (staff.getRole() != Role.STAFF) {
+            throw new RuntimeException("User is not a staff");
+        }
+
+        userService.updateProfile(staff.getId(), request);
+        systemLogService.log(staff.getId(), "UPDATE STAFF PROFILE");
+
+        return userRepository.save(staff);
+    }
+
 }

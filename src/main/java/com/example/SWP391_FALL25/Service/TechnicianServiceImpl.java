@@ -34,9 +34,31 @@ public class TechnicianServiceImpl implements TechnicianService{
     private PaymentRepository paymentRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private SystemLogService systemLogService;
 
+    @Autowired
+    private UserService userService;
+
+    @Transactional
+    public Users updateTechnicianProfile(Long technicianId, UpdateUserProfileRequest request) {
+        Users technician = userRepository.findById(technicianId)
+                .orElseThrow(() -> new RuntimeException("Technician not found"));
+
+        if (technician.getRole() != Role.TECHNICIAN) {
+            throw new RuntimeException("User is not a technician");
+        }
+
+        userService.updateProfile(technician.getId(), request);
+        systemLogService.log(technician.getId(), "UPDATE TECHNICIAN PROFILE");
+
+        return userRepository.save(technician);
+    }
 
 
     @Override
