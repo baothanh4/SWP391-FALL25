@@ -77,11 +77,9 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
 
         ServiceAppointment appointment = serviceAppointmentRepository.save(serviceAppointment);
 
-        createReminder(vehicle, dto.getAppointmentDate());
-
-        // ✅ Gửi email thông báo
+        // ✅ Gửi email xác nhận
         try {
-            String to = vehicle.getCustomer().getEmail(); // hoặc dto.getEmail() nếu có trong DTO
+            String to = vehicle.getCustomer().getEmail();
             String subject = "Xác nhận lịch hẹn dịch vụ xe";
             String body = "Xin chào " + vehicle.getCustomer().getFullname() + ",\n\n"
                     + "Bạn đã đặt lịch hẹn dịch vụ thành công.\n\n"
@@ -98,9 +96,10 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
             System.err.println("❌ Không thể gửi email xác nhận: " + e.getMessage());
         }
 
-        systemLogService.log(vehicle.getCustomer().getId(),"BOOKING APPOINTMENT");
+        systemLogService.log(vehicle.getCustomer().getId(), "BOOKING APPOINTMENT");
         return appointment;
     }
+
 
     @Override
     public ServiceAppointment assignTechnician(Long appointmentId, Long technicianId) {
@@ -319,6 +318,40 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
 
     @Transactional
     @Override
+    public void sendReportToCustomer(Long appointmentId) {
+        ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        Vehicle vehicle = appointment.getVehicle();
+        Users customer = vehicle.getCustomer();
+
+        // Cập nhật trạng thái báo cáo
+        appointment.setStatus(AppointmentStatus.COMPLETED);
+        serviceAppointmentRepository.save(appointment);
+
+        // Lấy report (nếu có)
+        ServiceReport report = reportRepository.findByAppointment(appointment);
+        // Gửi email thông báo
+        try {
+            String to = customer.getEmail();
+            String subject = "Báo cáo dịch vụ xe của bạn đã sẵn sàng";
+            String body = "Xin chào " + customer.getFullname() + ",\n\n"
+                    + "Báo cáo dịch vụ cho xe " + vehicle.getBrand() + " " + vehicle.getModel() + " của bạn đã được hoàn tất.\n\n"
+                    + "👉 Vui lòng đăng nhập vào hệ thống để xem chi tiết báo cáo tại: "
+                    + "https://your-domain.com/customer/report/" + report.getId() + "\n\n"
+                    + "Trân trọng,\nĐội ngũ Dịch vụ Kỹ thuật.";
+
+            emailService.sendEmail(to, subject, body);
+            System.out.println("✅ Email thông báo báo cáo đã được gửi đến khách hàng " + to);
+        } catch (Exception e) {
+            System.err.println("❌ Gửi email thất bại: " + e.getMessage());
+        }
+
+        systemLogService.log(customer.getId(), "SEND REPORT TO CUSTOMER");
+    }
+
+    @Transactional
+    @Override
     public List<ServiceReportDetails> regenerateDetailsByKm(Long reportId, Integer currentKm){
        ServiceReport report=reportRepository.findById(reportId).orElseThrow(()->new RuntimeException("Report not found"));
 
@@ -422,40 +455,32 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
         }
     }
 
-    private void createReminder(Vehicle vehicle, LocalDate appointmentDate){
-        MaintenancePlan plan=maintenancePlanRepository.findByIntervalMonths(6).orElseThrow(()->new RuntimeException("Maintenance plan not found"));
-        Reminder reminder=new Reminder();
-        reminder.setVehicle(vehicle);
-        reminder.setMaintenancePlan(plan);
-        reminder.setStatus(ReminderStatus.PENDING);
-        reminder.setReminderDate(appointmentDate.plusMonths(plan.getIntervalMonths()));
+    private void updateReminderForCurrentKm(Vehicle vehicle, MaintenancePlan currentPlan) {
+        List<Reminder> reminders = reminderRepository.findByVehicle(vehicle);
 
-        reminderRepository.save(reminder);
-    }
+        for (Reminder reminder : reminders) {
+            MaintenancePlan plan = reminder.getMaintenancePlan();
+            if (plan == null) continue;
 
-    private void updateReminderForCurrentKm(Vehicle vehicle,MaintenancePlan currentPlan){
-        List<Reminder> reminders=reminderRepository.findByVehicle(vehicle);
-
-        for(Reminder reminder:reminders){
-            MaintenancePlan plan=reminder.getMaintenancePlan();
-            if(plan==null){
-                continue;
-            }
-
-            if(plan.getIntervalKm()<currentPlan.getIntervalKm()){
+            // Xác định trạng thái reminder dựa trên intervalKm
+            if (plan.getIntervalKm() < currentPlan.getIntervalKm()) {
                 reminder.setStatus(ReminderStatus.MISSED);
-            }else if(plan.getIntervalKm().equals(currentPlan.getIntervalKm())){
+            } else if (plan.getIntervalKm().equals(currentPlan.getIntervalKm())) {
                 reminder.setStatus(ReminderStatus.DONE);
-            }else{
+            } else {
                 reminder.setStatus(ReminderStatus.PENDING);
             }
+
             reminderRepository.save(reminder);
         }
 
-        MaintenancePlan nextPlan=maintenancePlanRepository.findTopByIntervalKmGreaterThanOrderByIntervalKmAsc(currentPlan.getIntervalKm()).orElse(null);
+        // ✅ Tạo reminder mới cho lần kế tiếp nếu chưa tồn tại
+        MaintenancePlan nextPlan = maintenancePlanRepository
+                .findTopByIntervalKmGreaterThanOrderByIntervalKmAsc(currentPlan.getIntervalKm())
+                .orElse(null);
 
-        if(nextPlan!=null && reminders.stream().noneMatch(r ->r.getMaintenancePlan().getId().equals(nextPlan.getId()))){
-            Reminder nextReminder=new Reminder();
+        if (nextPlan != null && reminders.stream().noneMatch(r -> r.getMaintenancePlan().getId().equals(nextPlan.getId()))) {
+            Reminder nextReminder = new Reminder();
             nextReminder.setVehicle(vehicle);
             nextReminder.setMaintenancePlan(nextPlan);
             nextReminder.setStatus(ReminderStatus.PENDING);
@@ -463,4 +488,5 @@ public class ServiceAppointmentServiceImpl implements ServiceAppointmentService{
             reminderRepository.save(nextReminder);
         }
     }
+
 }

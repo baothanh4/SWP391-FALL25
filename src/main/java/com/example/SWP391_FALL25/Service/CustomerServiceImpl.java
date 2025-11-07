@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -205,6 +206,82 @@ public class CustomerServiceImpl implements CustomerService{
         return response;
     }
 
+    @Override
+    public String approveReport(Long appointmentId, FeedbackUpdateDTO dto) {
+        ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        ServiceReport report = appointment.getReport();
+        if (report == null) {
+            throw new IllegalStateException("No service report found for this appointment");
+        }
+
+        // ✅ Cập nhật feedback và trạng thái
+        report.setCustomerFeedback(dto.getCustomerFeebdack());
+        report.setCustomerFeedbackDate(LocalDateTime.now());
+        report.setCustomerApproved(true);
+        reportRepository.save(report);
+
+        // ✅ Cập nhật trạng thái lịch hẹn
+        appointment.setStatus(AppointmentStatus.APPROVED);
+        serviceAppointmentRepository.save(appointment);
+
+        // ✅ Gửi email cho kỹ thuật viên (nếu có)
+        try {
+            emailService.sendApprovalEmailToTechnician(
+                    appointment.getTechnicianAssigned(),
+                    appointment.getId()
+            );
+        } catch (Exception e) {
+            System.out.println("⚠️ Failed to send approval email: " + e.getMessage());
+        }
+
+        // ✅ Ghi log (dựa vào customer có sẵn trong vehicle)
+        Long customerId = appointment.getVehicle().getCustomer().getId();
+        systemLogService.log(customerId, "CUSTOMER APPROVED FEEDBACK for appointment ID: " + appointmentId);
+
+        return "Feedback updated successfully and report approved.";
+    }
+
+    @Override
+    public String rejectReport(Long appointmentId, String feedback) {
+        ServiceAppointment appointment = serviceAppointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        ServiceReport report = appointment.getReport();
+        if (report == null) {
+            throw new IllegalStateException("No service report found for this appointment");
+        }
+
+        // ✅ Cập nhật phản hồi khách hàng
+        report.setCustomerFeedback(feedback);
+        report.setCustomerFeedbackDate(LocalDateTime.now());
+        report.setCustomerApproved(false);
+        reportRepository.save(report);
+
+        // ✅ Đặt lại trạng thái báo cáo để technician chỉnh sửa lại
+        appointment.setStatus(AppointmentStatus.IN_PROGRESS);
+        serviceAppointmentRepository.save(appointment);
+
+        // ✅ Gửi email thông báo cho technician
+        try {
+            emailService.sendRejectionEmailToTechnician(
+                    appointment.getTechnicianAssigned(),
+                    appointment.getId(),
+                    feedback
+            );
+        } catch (Exception e) {
+            System.out.println("❌ Failed to send rejection email: " + e.getMessage());
+        }
+
+        // ✅ Ghi log
+        Long customerId = appointment.getVehicle().getCustomer().getId();
+        systemLogService.log(customerId, "CUSTOMER REJECTED FEEDBACK for appointment ID: " + appointmentId);
+
+        return "Report rejected and feedback saved successfully.";
+    }
+
+
     @Transactional
     @Override
     public void cancelAppointment(Long appointmentId) {
@@ -345,9 +422,6 @@ public class CustomerServiceImpl implements CustomerService{
         return appointment;
     }
 
-
-
-
     private void sendApprovalEmail(ServiceAppointment appointment) {
         try {
             String to = appointment.getVehicle().getCustomer().getEmail();
@@ -402,6 +476,32 @@ public class CustomerServiceImpl implements CustomerService{
             emailService.sendEmail(to, subject, body);
         } catch (Exception e) {
             System.err.println("❌ Failed to send cancel email: " + e.getMessage());
+        }
+    }
+
+    private void sendRejectionEmailToTechnician(ServiceAppointment appointment, String reason) {
+        try {
+            String technicianEmail = appointment.getTechnicianAssigned();
+            if (technicianEmail == null || technicianEmail.isEmpty()) return;
+
+            String subject = "Khách hàng từ chối báo cáo dịch vụ";
+            String body = String.format(
+                    "Kính gửi kỹ thuật viên,\n\n" +
+                            "Khách hàng %s đã từ chối báo cáo dịch vụ cho xe %s (%s).\n" +
+                            "Ngày hẹn: %s\n" +
+                            "Lý do từ chối: %s\n\n" +
+                            "Vui lòng kiểm tra lại báo cáo và cập nhật thông tin nếu cần.\n\n" +
+                            "Trân trọng,\nĐội ngũ Dịch vụ Bảo Dưỡng Xe Điện.",
+                    appointment.getVehicle().getCustomer().getFullname(),
+                    appointment.getVehicle().getBrand(),
+                    appointment.getVehicle().getModel(),
+                    appointment.getAppointmentDate(),
+                    reason
+            );
+
+            emailService.sendEmail(technicianEmail, subject, body);
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send rejection email to technician: " + e.getMessage());
         }
     }
 

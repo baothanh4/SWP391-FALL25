@@ -3,13 +3,14 @@ package com.example.SWP391_FALL25.Controller;
 
 import com.example.SWP391_FALL25.DTO.Auth.*;
 import com.example.SWP391_FALL25.Entity.ServiceAppointment;
+import com.example.SWP391_FALL25.Entity.ServiceReport;
 import com.example.SWP391_FALL25.Entity.Vehicle;
-import com.example.SWP391_FALL25.Service.CustomerService;
-import com.example.SWP391_FALL25.Service.ReminderService;
-import com.example.SWP391_FALL25.Service.ServiceAppointmentService;
-import com.example.SWP391_FALL25.Service.ServiceCenterService;
+import com.example.SWP391_FALL25.Repository.ServiceReportRepository;
+import com.example.SWP391_FALL25.Service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,12 @@ public class CustomerController {
 
     @Autowired
     private final ReminderService reminderService;
+
+    @Autowired
+    private PdfGeneratorService pdfGeneratorService;
+
+    @Autowired
+    private ServiceReportRepository serviceReportRepository;
 
     public CustomerController(ReminderService reminderService) {
         this.reminderService = reminderService;
@@ -125,4 +132,35 @@ public class CustomerController {
         reminderService.generateInitialReminders(vehicleId);
         return "Reminders generated successfully!";
     }
+
+    @GetMapping("/appointment/{appointmentId}")
+    public ResponseEntity<byte[]> downloadReportByAppointment(@PathVariable Long appointmentId) {
+        ServiceReport report = serviceReportRepository.findByAppointmentId(appointmentId)
+                .orElseThrow(() -> new RuntimeException("No report found for appointment ID: " + appointmentId));
+
+        byte[] pdfBytes = pdfGeneratorService.generateReportPDF(report);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "ServiceReport_Appointment_" + appointmentId + ".pdf");
+
+        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+    }
+
+    @PutMapping("/appointments/{appointmentId}/approve")
+    public ResponseEntity<String> approveFeedback(
+            @PathVariable Long appointmentId,
+            @RequestBody FeedbackUpdateDTO dto) {
+
+        return ResponseEntity.ok(customerService.approveReport(appointmentId, dto));
+    }
+
+    @PutMapping("/appointments/{appointmentId}/reject")
+    public ResponseEntity<String> rejectFeedback(
+            @PathVariable Long appointmentId,
+            @RequestParam String feedback) {
+
+        return ResponseEntity.ok(customerService.rejectReport(appointmentId, feedback));
+    }
+
 }

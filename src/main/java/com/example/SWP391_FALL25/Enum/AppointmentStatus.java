@@ -6,6 +6,7 @@ public enum AppointmentStatus {
     INSPECTING,
     QUOTATION_SENT,
     APPROVED,
+    REJECTED,
     IN_PROGRESS,
     COMPLETED,
     PAYMENT_PENDING,

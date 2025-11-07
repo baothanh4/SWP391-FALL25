@@ -33,5 +33,10 @@ public class StaffController {
         return ResponseEntity.ok(appointments);
     }
 
+    @PatchMapping("/appointments/{id}/send-car-back")
+    public ResponseEntity<?> sendCarBack(@PathVariable(name = "id")  Long appointmentId){
+        staffService.updateAppointmentStatus(appointmentId);
+        return ResponseEntity.ok().body("Send car back completed");
+    }
 
 }

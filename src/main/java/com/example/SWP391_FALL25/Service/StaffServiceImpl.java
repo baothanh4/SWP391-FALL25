@@ -7,10 +7,8 @@ import com.example.SWP391_FALL25.Repository.ServiceAppointmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 @Service
 public class StaffServiceImpl implements StaffService {
@@ -38,5 +36,13 @@ public class StaffServiceImpl implements StaffService {
             result.add(dto);
         }
         return result;
+    }
+
+    @Override
+    public void updateAppointmentStatus(Long appointmentId){
+        ServiceAppointment appointment=appointmentRepository.findById(appointmentId).orElseThrow(()->new IllegalArgumentException("appointment not found"));
+
+        appointment.setStatus(AppointmentStatus.COMPLETED);
+        appointmentRepository.save(appointment);
     }
 }
