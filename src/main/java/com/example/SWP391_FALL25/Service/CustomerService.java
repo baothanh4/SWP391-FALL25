@@ -1,6 +1,7 @@
 package com.example.SWP391_FALL25.Service;
 
 import com.example.SWP391_FALL25.DTO.Auth.DetailTotalCostResponseDTO;
+import com.example.SWP391_FALL25.DTO.Auth.FeedbackUpdateDTO;
 import com.example.SWP391_FALL25.DTO.Auth.RegisterRequest;
 import com.example.SWP391_FALL25.DTO.Auth.VehicleDTO;
 import com.example.SWP391_FALL25.Entity.ServiceAppointment;
@@ -23,6 +24,10 @@ public interface CustomerService {
     List<ServiceAppointment> getAppointmentByUser(Long userId);
 
     DetailTotalCostResponseDTO getDetailTotalCostReport(Long appointmentId);
+
+    String approveReport(Long appointmentId, FeedbackUpdateDTO dto);
+
+    String rejectReport(Long appointmentId, String feedback);
 
     @Transactional
     void cancelAppointment(Long appointmentId);

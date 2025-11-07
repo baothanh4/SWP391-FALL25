@@ -112,4 +112,9 @@ public class TechnicianController {
         return ResponseEntity.ok(updatedDetails);
     }
 
+    @PostMapping("/{appointmentId}/send-report")
+    public ResponseEntity<String> sendReportToCustomer(@PathVariable Long appointmentId) {
+        serviceAppointmentService.sendReportToCustomer(appointmentId);
+        return ResponseEntity.ok("Report has been sent to customer.");
+    }
 }

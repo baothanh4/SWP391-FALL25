@@ -7,4 +7,6 @@
     public interface StaffService {
     
         List<AppointmentDTO> getAllAppointments();
+
+        void updateAppointmentStatus(Long appointmentId);
     }

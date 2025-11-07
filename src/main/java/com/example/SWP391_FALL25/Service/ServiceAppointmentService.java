@@ -24,5 +24,8 @@ public interface ServiceAppointmentService {
     ServiceReportDetails updateReportDetails(Long detailsId, ServiceReportDetailDTO dto);
 
     @Transactional
+    void sendReportToCustomer(Long appointmentId);
+
+    @Transactional
     List<ServiceReportDetails> regenerateDetailsByKm(Long reportId, Integer currentKm);
 }
