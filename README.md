@@ -45,11 +45,11 @@
 ## 🧩 Kiến trúc hệ thống
 
 - **Backend:** Java 21 + Spring Boot 3.3
-- **Database:** SQL Server / MySQL
+- **Database:** SQL Server
 - **Auth:** JWT + Role-based Access Control
 - **Payment:** VNPay + VietQR
 - **Mail:** JavaMailSender
-- **Deploy:** AWS / Render / Railway
+- **Deploy:** AWS
 
 ---
 
@@ -77,15 +77,15 @@ src/<br>
 
 ## ⚙️ Điều kiện tiên quyết
 
-| Công cụ           | Phiên bản khuyến nghị | Mục đích |
-|-------------------|------------------------|-----------|
-| **Java JDK**      | 21+ | Ngôn ngữ chính |
-| **Spring Boot**   | 3.3+ | Framework backend |
-| **Maven**         | 3.9+ | Quản lý dependencies |
-| **SQL ServerL**   | 8.0+ | Cơ sở dữ liệu |
-| **Git**           | Mới nhất | Quản lý source code |
+| Công cụ          | Phiên bản khuyến nghị | Mục đích |
+|------------------|------------------------|-----------|
+| **Java JDK**     | 21+ | Ngôn ngữ chính |
+| **Spring Boot**  | 3.3+ | Framework backend |
+| **Maven**        | 3.9+ | Quản lý dependencies |
+| **SQL Server**   | 8.0+ | Cơ sở dữ liệu |
+| **Git**          | Mới nhất | Quản lý source code |
 | **VNPay Sandbox** | - | Kiểm thử thanh toán |
-| **IDE**           | IntelliJ IDEA | Phát triển & debug |
+| **IDE**          | IntelliJ IDEA | Phát triển & debug |
 
 ---
 
