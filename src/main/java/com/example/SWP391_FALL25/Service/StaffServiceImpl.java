@@ -30,6 +30,12 @@ public class StaffServiceImpl implements StaffService {
     @Autowired
     private SystemLogService systemLogService;
 
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private SystemLogService log;
+
     @Override
     public List<AppointmentDTO> getAllAppointments() {
         List<ServiceAppointment> appointments = appointmentRepository.findAll();
@@ -57,6 +63,25 @@ public class StaffServiceImpl implements StaffService {
 
         appointment.setStatus(AppointmentStatus.COMPLETED);
         appointmentRepository.save(appointment);
+
+        String customerEmail=appointment.getVehicle().getCustomer().getEmail();
+        String customerFullName=appointment.getVehicle().getCustomer().getFullname();
+
+        String subject = "Xe của bạn đã sẵn sàng để nhận!";
+        String message = String.format(
+                "Kính gửi %s,\n\nXe của bạn đã được bảo dưỡng và hiện đã sẵn sàng để nhận.\n" +
+                        "Mã lịch hẹn dịch vụ: %d\n" +
+                        "Ngày hẹn: %s\n\nCảm ơn bạn đã tin tưởng và sử dụng dịch vụ của chúng tôi!\n\nTrân trọng,\nTrung tâm dịch vụ.",
+                customerFullName,
+                appointment.getId(),
+                appointment.getAppointmentDate()
+        );
+
+        try {
+            emailService.sendEmail(customerEmail, subject, message);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     @Override
