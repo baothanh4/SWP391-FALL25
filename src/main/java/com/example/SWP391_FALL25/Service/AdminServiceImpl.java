@@ -217,7 +217,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public List<Part> getLowStockParts(int threshold) {
         return partRepository.findAll().stream()
-                .filter(part -> part.getQuantity() != null && part.getQuantity() < threshold)
+                .filter(part -> part.getQuantity() != null && part.getQuantity() <= threshold)
                 .collect(Collectors.toList());
     }
 

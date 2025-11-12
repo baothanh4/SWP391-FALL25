@@ -6,6 +6,8 @@ import com.example.SWP391_FALL25.Entity.OtpToken;
 import com.example.SWP391_FALL25.Entity.SystemLog;
 import com.example.SWP391_FALL25.Entity.Users;
 import com.example.SWP391_FALL25.Enum.Role;
+import com.example.SWP391_FALL25.ExceptionHandler.LoginFailException;
+import com.example.SWP391_FALL25.ExceptionHandler.UserNotFoundException;
 import com.example.SWP391_FALL25.Repository.OtpTokenRepository;
 import com.example.SWP391_FALL25.Repository.SystemLogRepository;
 import com.example.SWP391_FALL25.Repository.UserRepository;
@@ -54,7 +56,7 @@ public class AuthServiceImpl implements AuthService{
 
     @Override
     public LoginResponse login(LoginRequest request){
-        Users users=userRepository.findByPhone(request.getPhone()).orElseThrow(()->new RuntimeException("User not found"));
+        Users users=userRepository.findByPhone(request.getPhone()).orElseThrow(()->new UserNotFoundException("User not found"));
 
        if(users.isAccountLocked()){
            if(users.getLockTime()!=null){
@@ -65,7 +67,7 @@ public class AuthServiceImpl implements AuthService{
                    users.setLockTime(null);
                    userRepository.save(users);
                }else{
-                   throw new RuntimeException("Account is locked. Try again later");
+                   throw new LoginFailException("Account is locked. Try again later");
                }
            }else{
                throw new RuntimeException("Account is locked");
