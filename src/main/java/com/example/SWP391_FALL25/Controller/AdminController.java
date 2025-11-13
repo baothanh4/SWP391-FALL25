@@ -15,7 +15,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -245,7 +247,9 @@ public class AdminController {
     }
 
     @GetMapping("/payments/total-cost")
-    public ResponseEntity<?> getTotalPayments(){
-        return ResponseEntity.ok(adminService.getTotalCost());
+    public ResponseEntity<Map<Object,Object>> getTotalPayments(){
+        Map<Object,Object> map = new HashMap<>();
+        map.put("totalCost",adminService.getTotalCost());
+        return ResponseEntity.ok(map);
     }
 }
