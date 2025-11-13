@@ -1,48 +1,46 @@
 ﻿# ⚡ EV Service Center Maintenance Management System
-**Phần mềm quản lý bảo dưỡng xe điện cho trung tâm dịch vụ**
+---
+
+## 🧭 Overview
+
+**The EV Service Center Maintenance Management System is a complete backend platform built with Java Spring Boot 21, designed to help electric vehicle (EV) service centers manage operations efficiently.
+- Streamline vehicle maintenance and scheduling
+- Enable online booking and payments
+- Track customer, staff, and technician activities
+- Manage inventory and spare parts
+- Provide financial and performance analytics
 
 ---
 
-## 🧭 Giới thiệu
+## 👥 Users Roles
 
-**EV Service Center Maintenance Management System** là hệ thống quản lý bảo dưỡng xe điện toàn diện, phát triển bằng **Java Spring Boot 21**, hỗ trợ trung tâm dịch vụ EV trong:
-- Quản lý khách hàng & xe điện
-- Theo dõi lịch bảo dưỡng
-- Phân công kỹ thuật viên
-- Quản lý phụ tùng, tài chính
-- Thanh toán online (QR / VNPay / eWallet)
-
----
-
-## 👥 Vai trò hệ thống
-
-| Role | Chức năng chính |
-|------|------------------|
-| **Customer** | Đặt lịch, xem nhắc nhở, thanh toán online, xem lịch sử bảo dưỡng |
-| **Staff** | Tiếp nhận yêu cầu, quản lý lịch bảo dưỡng, cập nhật trạng thái |
-| **Technician** | Thực hiện bảo dưỡng, cập nhật tiến độ, ghi nhận kết quả |
-| **Admin** | Quản lý hệ thống, nhân sự, phụ tùng, tài chính, báo cáo |
+| Role | Description                                                      |
+|------|------------------------------------------------------------------|
+| **Customer** | Book maintenance appointments, view reminders, make online payments, track maintenance history |
+| **Staff** | Manage bookings, approve service requests, update maintenance progress   |
+| **Technician** | Perform assigned maintenance tasks, log progress, update reports         |
+| **Admin** | Manage users, vehicles, parts, and finances; generate system-wide reports       |
 
 ---
 
-## ⚙️ Chức năng chính
+## ⚙️ Core Features
 
-### 🔹 1. Dành cho Khách hàng (Customer)
-- Nhắc nhở bảo dưỡng định kỳ (km / thời gian)
-- Đặt lịch trực tuyến và nhận xác nhận qua email
-- Thanh toán online: **QR Banking / VNPay / eWallet**
-- Quản lý lịch sử & chi phí bảo dưỡng
+### 🔹 1. For Customers (Customer)
+- Maintenance Reminders – Based on mileage or time intervals
+- Online Booking – Receive confirmation via email
+- Payment Options: **QR Banking / VNPay / eWallet**
+- Service History – Track maintenance cost and details
 
-### 🔹 2. Dành cho Trung tâm (Staff, Technician, Admin)
-- Quản lý khách hàng, hồ sơ xe, và phụ tùng
-- Phân công kỹ thuật viên & theo dõi tiến độ
-- Báo giá – tạo hóa đơn – thanh toán
-- Thống kê doanh thu, lợi nhuận, xu hướng lỗi EV
-- Gợi ý AI về nhu cầu phụ tùng thay thế
+### 🔹 2. For Service Center Staff (Staff, Technician, Admin)
+- Manage customer profiles, vehicle records, and spare parts
+- Assign technicians and monitor task progress
+- Handle quotation, billing, and payments
+- View financial statistics, profit trends, and EV issue reports
+- Get AI-powered recommendations for part replacements
 
 ---
 
-## 🧩 Kiến trúc hệ thống
+## 🧩 System Architecture
 
 - **Backend:** Java 21 + Spring Boot 3.3
 - **Database:** SQL Server
@@ -58,38 +56,38 @@ src/<br>
 ├── main/<br>
 │ ├── java/<br>
 │ │ └── com/example/SWP391_FALL25/<br>
-│ │ ├── Config/ # Cấu hình bảo mật, JWT, WebSocket, Email...<br>
-│ │ ├── Controller/ # Các REST API Controller<br>
-│ │ ├── DTO/Auth/ # Các DTO liên quan đến xác thực & đăng nhập<br>
-│ │ ├── Entity/ # Các entity ánh xạ bảng DB<br>
-│ │ ├── Enum/ # Các Enum: Role, Status, PaymentType,...<br>
-│ │ ├── ExceptionHandler/ # Xử lý ngoại lệ toàn cục<br>
-│ │ ├── Repository/ # Các lớp giao tiếp DB (JPA)<br>
-│ │ ├── Service/ # Xử lý logic nghiệp vụ<br>
-│ │ ├── Utility/ # Các tiện ích (QR, Email, DateTime,…)<br>
-│ │ └── Swp391Fall25Application.java # File khởi chạy chính<br>
+│ │ ├── Config/<br> 
+│ │ ├── Controller/<br>
+│ │ ├── DTO/Auth/<br>
+│ │ ├── Entity/<br>
+│ │ ├── Enum/<br>
+│ │ ├── ExceptionHandler/<br>
+│ │ ├── Repository/<br>
+│ │ ├── Service/<br>
+│ │ ├── Utility/<br>
+│ │ └── Swp391Fall25Application.java <br>
 │ └── resources/<br>
-│ ├── static/ # CSS, JS, Image (nếu có)<br>
-│ ├── templates/ # File template HTML (nếu dùng Thymeleaf)<br>
-│ └── application.properties # Cấu hình hệ thống<br>
+│ ├── static/ <br>
+│ ├── templates/ <br>
+│ └── application.properties <br>
 └── test/<br>
 
 
 ## ⚙️ Điều kiện tiên quyết
 
-| Công cụ          | Phiên bản khuyến nghị | Mục đích |
-|------------------|------------------------|-----------|
-| **Java JDK**     | 21+ | Ngôn ngữ chính |
-| **Spring Boot**  | 3.3+ | Framework backend |
-| **Maven**        | 3.9+ | Quản lý dependencies |
-| **SQL Server**   | 8.0+ | Cơ sở dữ liệu |
-| **Git**          | Mới nhất | Quản lý source code |
-| **VNPay Sandbox** | - | Kiểm thử thanh toán |
-| **IDE**          | IntelliJ IDEA | Phát triển & debug |
+| Tool              | Recommended Version | Purpose                 |
+|-------------------|---------------------|-------------------------|
+| **Java JDK**      | 21+                 | Core language           |
+| **Spring Boot**   | 3.3+                | Framework backend       |
+| **Maven**         | 3.9+                | Dependencies management |
+| **SQL Server**    | 8.0+                | Relational database     |
+| **Git**           | Mới nhất            | Source code management  |
+| **VNPay Sandbox** | -                   | Payment testing         |
+| **IDE**           | IntelliJ IDEA       | Deployment & debug      |
 
 ---
 
-## ⚙️ Cấu hình trong `application.properties`
+## ⚙️ Configure in`application.properties`
 
 ```properties
 # ==============================

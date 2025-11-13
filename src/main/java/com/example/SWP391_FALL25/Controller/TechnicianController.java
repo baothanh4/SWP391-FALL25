@@ -123,4 +123,5 @@ public class TechnicianController {
         serviceAppointmentService.sendReportToCustomer(appointmentId);
         return ResponseEntity.ok("Report has been sent to customer.");
     }
+
 }
