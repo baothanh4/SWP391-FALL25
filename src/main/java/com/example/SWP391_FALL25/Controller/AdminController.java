@@ -243,4 +243,9 @@ public class AdminController {
         adminService.unlockUser(id);
         return ResponseEntity.ok("Account unlocked successfully");
     }
+
+    @GetMapping("/payments/total-cost")
+    public ResponseEntity<?> getTotalPayments(){
+        return ResponseEntity.ok(adminService.getTotalCost());
+    }
 }

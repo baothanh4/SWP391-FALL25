@@ -58,6 +58,9 @@ public interface AdminService {
     List<MaintenancePlan> getAllMaintenancePlans();
     MaintenancePlan getMaintenancePlanById(Long id);
     MaintenancePlan createMaintenancePlan(MaintenancePlanDTO dto);
+
+    Double getTotalCost();
+
     MaintenancePlan updateMaintenancePlan(Long id, MaintenancePlanDTO dto);
     void deleteMaintenancePlan(Long id);
 
