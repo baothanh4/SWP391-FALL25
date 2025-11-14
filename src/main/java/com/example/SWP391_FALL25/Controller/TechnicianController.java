@@ -29,7 +29,7 @@ public class TechnicianController {
     @Autowired
     private UserRepository userRepository;
 
-    @PatchMapping("/update-profile/{technicianId}")
+    @PutMapping("/update-profile/{technicianId}")
     public ResponseEntity<?> updateProfile(@PathVariable Long technicianId, @RequestBody UpdateUserProfileRequest request) {
         return ResponseEntity.ok(technicianService.updateTechnicianProfile(technicianId, request));
     }
