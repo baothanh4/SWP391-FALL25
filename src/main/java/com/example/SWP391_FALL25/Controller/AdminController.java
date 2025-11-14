@@ -15,7 +15,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -242,5 +244,12 @@ public class AdminController {
     public ResponseEntity<?> unlockAccount(@PathVariable(name = "id")Long id){
         adminService.unlockUser(id);
         return ResponseEntity.ok("Account unlocked successfully");
+    }
+
+    @GetMapping("/payments/total-cost")
+    public ResponseEntity<Map<Object,Object>> getTotalPayments(){
+        Map<Object,Object> map = new HashMap<>();
+        map.put("totalCost",adminService.getTotalCost());
+        return ResponseEntity.ok(map);
     }
 }

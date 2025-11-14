@@ -309,6 +309,11 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    public Double getTotalCost() {
+        return paymentRepository.getTotalCost();
+    }
+
+    @Override
     @Transactional
     public MaintenancePlan updateMaintenancePlan(Long id, MaintenancePlanDTO dto) {
         MaintenancePlan plan = getMaintenancePlanById(id);
